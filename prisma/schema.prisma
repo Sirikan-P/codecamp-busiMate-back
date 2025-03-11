@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int  @id @default(autoincrement())
+  email String @unique
+  password String
+  firstName String
+  lastName String
+  addressId String
+  phoneNumber String
+  status Status
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user")
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Driver {
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String
+  firstName String
+  lastname String
+  age Int
+  gender Gender
+  phoneNumber String
+  idCard String
+  carRegisterationNo String
+  carType CarType
+  hasWheelChair OnHand @default(NOHAVE)
+  hasAssist OnHand @default(NOHAVE)
+  online OnLine
+  status Status
+  wallet Decimal
+  address String
+  lat Float
+  long Float
+  createdAT DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum CarType {
+  SEETS_4
+  SEETS_7
+  SEETS_9
+}
+
+enum OnHand {
+  HAVE
+  NOHAVE
+}
+
+enum OnLine {
+  ONLINE
+  OFFLINE
+}
+
