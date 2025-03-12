@@ -7,6 +7,9 @@ const handleErrors = require("./middlewares/error")
 
 // Import Routing
 const authRouter = require("./routes/auth-route")
+const userRouter = require("./routes/user-route")
+const driverRouter = require("./routes/driver-route")
+const adminRouter = require("./routes/admin-route")
 
 const app = express()
 
@@ -17,6 +20,9 @@ app.use(express.json())
 
 // Routing
 app.use("/api", authRouter)
+app.use("/api/user", userRouter)
+app.use("/api/driver", driverRouter)
+app.use("/api/admin", adminRouter)
 
 // Not found
 app.use(notFound)
