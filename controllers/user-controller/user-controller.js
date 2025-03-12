@@ -28,6 +28,7 @@ exports.editUser = (req, res, next) => {
 }
 exports.addPatients = (req, res, next) => {
     try {
+        const{firstName, lastName, age, gender} = req.body
         res.json({ msg: "Add patients" })
     } catch (error) {
         next(error)
