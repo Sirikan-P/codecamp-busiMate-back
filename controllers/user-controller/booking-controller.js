@@ -21,7 +21,7 @@ exports.createBooking = async (req, res, next) => {
 
         const user = await prisma.user.findUnique({
             where: {
-              id: userId,
+              id: +userId,
             },
           })
         if (!user) {
@@ -30,7 +30,7 @@ exports.createBooking = async (req, res, next) => {
 
         const patient = await prisma.patient.findUnique({
             where: {
-              id: patientId,
+              id: +patientId,
             },
           })
           if (!patient) {
@@ -38,7 +38,7 @@ exports.createBooking = async (req, res, next) => {
           }
         const driver = await prisma.driver.findUnique({
             where: {
-              id: driverId,
+              id: +driverId,
             },
           })
           if (!driver) {
@@ -47,7 +47,6 @@ exports.createBooking = async (req, res, next) => {
 
     const newBooking = await prisma.booking.create({
         data:{
-      userId : user,
       needWheelChair : needWheelChair,
       needAssist : needAssist,
       appointmentDate : appointmentDate,
@@ -56,9 +55,9 @@ exports.createBooking = async (req, res, next) => {
       appointmentImage : appointmentImage,   
       specialRequirement: specialRequirement, 
       totalPrice : totalPrice,  
-      patientId : patient,          
-      driverId : driver,           
-      hospitalId : hospitalId
+      patientId : +patient.id,          
+      driverId : +driver.id,           
+      hospitalId : +hospitalId
     }
     })
     res.status(201).json(newBooking)
@@ -71,10 +70,19 @@ exports.createBooking = async (req, res, next) => {
 
 exports.getBooking = async (req, res, next) => {
   try {
-    const { userId } = req.user.id
+    const  userId  = req.user.id
+    const user = await prisma.patient.findMany({
+      where: {
+        userId: +userId,
+      },
+    })
+      if(!user){
+        return createError(404, "User not found")
+      }
+
     const bookings = await prisma.booking.findMany({
         where: {
-          userId: userId,
+          patientId: +user,
         },
     })
 

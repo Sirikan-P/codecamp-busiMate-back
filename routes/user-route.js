@@ -1,13 +1,16 @@
 const express = require('express')
 const router = express.Router()
-const userController = require('../controllers/user-controller/user-controller')    
+const bookingController = require("../controllers/user-controller/booking-controller")
+const {authCheck} = require("../middlewares/authCheck")
 
 
-router.get('/me',userController.showUser)
-router.patch('/me/edit',userController.editUser)
-router.post('/patient/add',userController.addPatients)
-router.patch('/patient/edit',userController.editPatients)
-router.delete('/patient/:id',userController.deletePatients)
+router.post("/booking/create",authCheck, userController.createBooking)
+router.get("/booking/get", authCheck, userController.getBooking)
+router.patch("/booking/cancel",authCheck, userController.cancelBooking)
+
+
+// @ENDPOINT http://localhost:8877/api/user/...
+//
 
 module.exports = router
 

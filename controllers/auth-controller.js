@@ -6,7 +6,6 @@ const cloudinary = require("../configs/cloudinary");
 module.exports.registerUser = async (req, res) => {
   const { firstName, lastName, email, password, phoneNumber } = req.body;
   try {
-    console.log(req.body)
     if (
       !(
         firstName.trim() &&
@@ -15,8 +14,7 @@ module.exports.registerUser = async (req, res) => {
         password.trim() &&
         phoneNumber.trim()
       )
-    ) 
-     {
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
@@ -28,6 +26,7 @@ module.exports.registerUser = async (req, res) => {
         message: "Password must be at least 6 characters",
       });
     }
+
     const exists = await prisma.user.findUnique({
       where: { email },
     });
