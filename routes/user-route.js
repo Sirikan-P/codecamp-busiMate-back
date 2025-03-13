@@ -4,9 +4,9 @@ const bookingController = require("../controllers/user-controller/booking-contro
 const {authCheck} = require("../middlewares/authCheck")
 
 
-router.post("/booking/create",authCheck, userController.createBooking)
-router.get("/booking/get", authCheck, userController.getBooking)
-router.patch("/booking/cancel",authCheck, userController.cancelBooking)
+router.post("/booking/create",authCheck, bookingController.createBooking)
+router.get("/booking/get", authCheck, bookingController.getBooking)
+router.patch("/booking/cancel",authCheck, bookingController.cancelBooking)
 
 
 // @ENDPOINT http://localhost:8877/api/user/...
