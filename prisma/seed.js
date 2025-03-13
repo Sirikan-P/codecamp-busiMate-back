@@ -11,7 +11,6 @@ const User = [
     lastName: "Codecamp",
     password: hashedPassword,
     email: "andy@ggg.mail",
-    addressId: "1",
     phoneNumber: "089-123-4567",
     status: "ACTIVE",
   },
@@ -20,7 +19,6 @@ const User = [
     lastName: "รักดี",
     password: hashedPassword,
     email: "sunee@ggg.mail",
-    addressId: "3",
     phoneNumber: "089-123-4567",
     status: "ACTIVE",
   },
@@ -38,7 +36,7 @@ const Status = [
 const Driver = [
   {
     firstName: "วรชัย",
-    lastname: " ตั้งตรง",
+    lastName: " ตั้งตรง",
     email: "vara@ggg.mail",
     password: hashedPassword,
     phoneNumber: "089-123-4567",
@@ -58,7 +56,7 @@ const Driver = [
   },
   {
     firstName: "สมหญิง",
-    lastname: "สมบูรณ์",
+    lastName: "สมบูรณ์",
     email: "sunee@ggg.mail",
     password: hashedPassword,
     phoneNumber: "089-123-4567",
@@ -91,6 +89,7 @@ const DriverWallet = [
   {
     amount: "0.00",
     type: "INCOME",
+    driverId: 1,
   },
 ];
 
@@ -107,22 +106,29 @@ const UserAddress = [
   {
     address: "123/45 ถนนสุขสันต์ แขวงบางรัก เขตบางรัก กรุงเทพฯ 10500",
     lat: 13.7563,
-    log: 100.5018,
+    long: 100.5018,
+    userId: 1,
   },
   {
     address: "99/88 หมู่บ้านแสนสุข ต.ปากเกร็ด อ.ปากเกร็ด จ.นนทบุรี 11120",
     lat: 13.9123,
-    log: 100.4957,
+    long: 100.4957,
+    userId: 1,
+
   },
   {
     address: "55 ซอยลาดพร้าว 15 แขวงจตุจักร เขตจตุจักร กรุงเทพฯ 10900",
     lat: 13.8192,
-    log: 100.5638,
+    long: 100.5638,
+    userId: 1,
+
   },
   {
     address: "77/2 ถนนเจริญนคร แขวงคลองต้นไทร เขตคลองสาน กรุงเทพฯ 10600",
     lat: 13.7265,
-    log: 100.5102,
+    long: 100.5102,
+    userId: 1,
+
   },
 ];
 
@@ -322,7 +328,6 @@ const Admin = [
     lastName: "สุขสวัสดิ์",
     email: "kanrawee@ggg.mail",
     password: hashedPassword,
-    profileimage : "https://images.unsplash.com/photo-1553531381-02339234a09f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format",
   },
 ];
 
@@ -337,13 +342,7 @@ const Message = [
     receiverDriverId: 1,
     bookingId: 1,
   },
-  {
-    message: "สวัสดีค่ะ",
-    sender: "DRIVER",
-    bookingId: 1,
-    userId: 1,
-    driverId: 1,
-  },
+
 ];
 
 console.log("DB seed...");
@@ -383,10 +382,6 @@ async function seedDB() {
   });
   await prisma.driverWallet.createMany({
     data: DriverWallet,
-    skipDuplicates: true,
-  });
-  await prisma.transactionType.createMany({
-    data: TransactionType,
     skipDuplicates: true,
   });
   await prisma.review.createMany({
