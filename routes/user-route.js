@@ -1,11 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const userController = require("../controllers/user-controller/booking-controller")
+const userController = require('../controllers/user-controller/user-controller')    
 
-
-router.post("/booking/create", userController.createBooking)
-router.get("/booking/get", userController.getBooking)
-router.patch("/booking/cancel", userController.cancelBooking)
 
 router.get('/me',userController.showUser)
 router.patch('/me/edit',userController.editUser)
