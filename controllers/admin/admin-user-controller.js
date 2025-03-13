@@ -1,31 +1,63 @@
 const createError = require("../../middlewares/error")
 const prisma  = require("../../configs/prisma")
 
-exports.updateUserData = (req, res, next) => {
+exports.getUserDataAll = async (req, res, next) => {
   try {
-    // console.log(aaa)
-    const {id} = req.params
-    const {status} = req.body
-    res.json({message : "Hello, Update userData", id, status})
+    const result = await prisma.user.findMany({
+      select: {
+        id: true,
+        status: true
+      },
+      orderBy:{
+        id: "asc"
+      }
+
+    })
+    res.json({message: "Hello, getUserAll",data: result})
   } catch (error) {
     console.log(error)
     next(error)
   }
 }
 
-exports.deleteUser = (req, res, next) => {
+
+exports.updateUserData = async (req, res, next) => {
   try {
     // console.log(aaa)
     const {id} = req.params
     const {status} = req.body
-    res.json({message : "Hello, Delete User", id, status})
+    console.log("id, status  ==== ", id, status)
+    const result = await prisma.user.update({
+      where: {id: Number(id)},
+      data: {status: status}
+    })
+    console.log("result ==== ", result)
+    res.json({message : "Hello, Delete(soft) User", data: result})
   } catch (error) {
     console.log(error)
     next(error)
   }
 }
 
-exports.getDriverAll = async (req, res, next) => {
+exports.deleteUser = async (req, res, next) => {
+  try {
+    // console.log(aaa)
+    const {id} = req.params
+    const {status} = req.body
+    console.log("id, status  ==== ", id, status)
+    const result = await prisma.user.update({
+      where: {id: Number(id)},
+      data: {status: status}
+    })
+    console.log("result ==== ", result)
+    res.json({message : "Hello, Delete(soft) User", data: result})
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+}
+
+exports.getDriverDataAll = async (req, res, next) => {
   try {
     const result = await prisma.driver.findMany({
       select: {
@@ -37,7 +69,7 @@ exports.getDriverAll = async (req, res, next) => {
       }
 
     })
-    res.json({message: "Hello, getDriverAll", result})
+    res.json({message: "Hello, getDriverAll", data: result})
   } catch (error) {
     console.log(error)
     next(error)
@@ -63,12 +95,18 @@ exports.updateDriverData = async (req, res, next) => {
   }
 }
 
-exports.deleteDriver = (req, res, next) => {
+exports.deleteDriver = async (req, res, next) => {
   try {
     // console.log(aaa)
     const {id} = req.params
     const {status} = req.body
-    res.json({message : "Hello, Delete Driver", id, status})
+    console.log("id, status  ==== ", id, status)
+    const result = await prisma.driver.update({
+      where: {id: Number(id)},
+      data: {status: status}
+    })
+    console.log("result ==== ", result)
+    res.json({message : "Hello, Delete(soft) Driver", data: result})
   } catch (error) {
     console.log(error)
     next(error)
