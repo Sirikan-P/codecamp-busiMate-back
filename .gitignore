@@ -1,2 +1,4 @@
 .env
 /node_modules
+/prisma/seed.js
+/prisma/resetDB.js

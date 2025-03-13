@@ -8,6 +8,7 @@ router.get("/dashboard/userData", adminDashboardController.getUserData)
 router.get("/dashboard/paymentData", adminDashboardController.getPaymentData)
 router.patch("/user/updateUserData/:id", adminUserController.updateUserData)
 router.patch("/user/deleteUser/:id", adminUserController.deleteUser)
+router.get("/user/getDriverDataAll", adminUserController.getDriverAll)
 router.patch("/user/updateDriverData/:id", adminUserController.updateDriverData)
 router.patch("/user/deleteDriver/:id", adminUserController.deleteDriver)
 
