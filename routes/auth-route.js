@@ -6,6 +6,7 @@ const {
   updateProfile,
   checkAuth,
   loginDriver,
+  adminLogin,
 } = require("../controllers/auth-controller");
 const { authUser } = require("../middlewares/auth-user");
 
@@ -15,6 +16,7 @@ router.post("/register-user", registerUser);
 router.post("/register-driver", registerDriver);
 router.post("/login-user", loginUser);
 router.post("/login-driver", loginDriver);
+router.post("/login-admin", adminLogin);
 
 router.put("/update-profile", authUser, updateProfile);
 
