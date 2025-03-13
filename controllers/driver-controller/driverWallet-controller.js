@@ -4,6 +4,7 @@ const createError = require("../../utils/createError")
 // income ----------------------------------------
 exports.income= async (req,res,next)=>{
   try {
+
   const driverId = parseInt(req.user.id);
   const { incomeAmount  } = req.body;
 
@@ -11,16 +12,16 @@ exports.income= async (req,res,next)=>{
     prisma.driverWallet.create({
       data: {
         driverId: driverId,
-        amount: incomeAmount,
+        amount: +incomeAmount,
         type: "INCOME",
       },
     }),
     prisma.driver.update({
-      where: { id: driverId },
-      data: { wallet: { increment: incomeAmount } },
+      where: { id: +driverId },
+      data: { wallet: { increment: +incomeAmount } },
     }),
   ]);
-
+  console.log(1)
     res.json({  success: true ,
                 message: `income, wallet : ${ incomeAmount }` ,
                 result: wallet  })
@@ -39,13 +40,13 @@ exports.outcome= async (req,res,next)=>{
       prisma.driverWallet.create({
         data: {
           driverId: driverId,
-          amount: outcomeAmount,
+          amount: +outcomeAmount,
           type: "OUTCOME",
         },
       }),
       prisma.driver.update({
-        where: { id: driverId },
-        data: { wallet: { decrement: outcomeAmount } },
+        where: { id: +driverId },
+        data: { wallet: { decrement: +outcomeAmount } },
       }),
     ]);
 

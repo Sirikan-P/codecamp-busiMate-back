@@ -22,9 +22,9 @@ router.get('/booking' , authCheck , driverBookingController.showAll)
 router.patch('/booking/:id' , authCheck,driverBookingController.updateBookingStatus)
 
 //my wallet -------
-router.post('wallet/income' , authCheck, driverWalletController.income)
-router.post('wallet/outcome' , authCheck, driverWalletController.outcome)
-router.get('wallet' , authCheck, driverWalletController.getDriverWalletDetails)
+router.post('/wallet/income' , authCheck, driverWalletController.income)
+router.post('/wallet/outcome' , authCheck, driverWalletController.outcome)
+router.get('/wallet' , authCheck, driverWalletController.getDriverWalletDetails)
 
 
 module.exports = router
