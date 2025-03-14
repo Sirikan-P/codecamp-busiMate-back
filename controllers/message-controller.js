@@ -64,9 +64,10 @@ module.exports.getMessages = async (req, res) => {
 
 module.exports.sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text, image, recipientType } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user.id;
+    const isUser = req.user.role === "user";
 
     let imageUrl;
     if (image) {
@@ -74,14 +75,16 @@ module.exports.sendMessage = async (req, res) => {
       imageUrl = uploadResponse.secure_url;
     }
 
-    const newMessage = new Message({
-      senderId,
-      receiverId,
-      text,
-      image: imageUrl,
+    const newMessage = await prisma.message.create({
+      data: {
+        text,
+        image: imageUrl,
+        ...(isUser ? { senderUserId: senderId } : { senderDriverId: senderId }),
+        ...(recipientType === "user"
+          ? { receiverUserId: parseInt(receiverId) }
+          : { receiverDriverId: parseInt(receiverId) }),
+      },
     });
-
-    await newMessage.save();
 
     res.status(201).json(newMessage);
   } catch (error) {
