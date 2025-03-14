@@ -189,7 +189,6 @@ enum BookingStatus {
   UP_COMING
   IN_PROCESS
   COMPLETE
-  CANCEL
 }
 
 enum Request {
