@@ -36,7 +36,7 @@ module.exports.registerUser = async (req, res) => {
         .json({ success: false, message: "Email already exists" });
     }
 
-    const payload = { email };
+    const payload = { email};
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "15d",
     });

@@ -265,16 +265,11 @@ const Review = [
     rate: "A",
     message: "ดีมากครับ",
     bookingId: 1,
-    userId: 1,
-    driverId: 1
-
   },
   {
     rate: "B",
     message: "ดีมากครับ",
     bookingId: 1,
-    userId: 1,
-    driverId: 1
   },
 ];
 
