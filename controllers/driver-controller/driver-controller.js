@@ -10,12 +10,11 @@ const path = require('path')
 exports.currentDriver= async (req,res,next)=>{
   try {
     //console.log( req.user)
-    console.log("xx",req.user)
-    const { email } = req.user
+    const { email ,id } = req.user
 
     const profile = await prisma.driver.findFirst({
-        where: {email: email ,
-        }
+        where: {email: email , id:id },
+        include: { DriverAddress: true } 
     })
 
     const { password: pw, ...newProfile } = profile;
@@ -31,19 +30,19 @@ exports.currentDriver= async (req,res,next)=>{
 //update profile ----------------------------------------
 exports.updateProfile= async(req,res,next)=>{
     try {
-        const { email } = req.user
+        const { email , id } = req.user
         const newData = req.body
 
-        const driverData = await prisma.driver.findUnique({
-            where: { email: email },
+        console.log(1111,req.user )
+        const driverData = await prisma.driver.findFirst({
+            where: { email: email ,id: id},
             include: { DriverAddress: true } // ดึงข้อมูลที่อยู่มาด้วย
         })
  
         if (!driverData) {
             return next(createError(400, 'Driver not found'))
         }
-
-        const id = driverData.id
+        const { password: pw, ...newProfile } = profile;
           // แปลงค่าที่จำเป็นให้เป็นตัวเลข
          if (newData.age) newData.age = Number(newData.age)
         if (newData.lat) newData.lat = parseFloat(newData.lat)
@@ -51,6 +50,7 @@ exports.updateProfile= async(req,res,next)=>{
 
             // เตรียมอัปเดตข้อมูล driver
         const driverUpdateData = { ...newData };
+        delete driverUpdateData.password
         delete driverUpdateData.address; // เอา address ออกจาก newData เพราะ Prisma คาดหวังอ็อบเจ็กต์ ไม่ใช่ string
         delete driverUpdateData.lat;
         delete driverUpdateData.long;
@@ -69,7 +69,8 @@ exports.updateProfile= async(req,res,next)=>{
         //             ?  {...newData , profileImage : uploadResult.secure_url }
         //             :  newData
         // console.log(data)
-        console.log(driverData)
+        console.log(222,driverUpdateData)
+
         if (newData.address || newData.lat || newData.long) {
             const address = await prisma.driverAddress.findFirst({
                 where : {driverId: Number(id) ,
@@ -79,23 +80,32 @@ exports.updateProfile= async(req,res,next)=>{
             })
        /// console.log(address)
         if(address) {
-            console.log(1)
+
+            //set other to NOTUSE
+            await prisma.driverAddress.update({
+                where: { driverId: Number(id) , status: "USE"} , 
+                data:  { status: "NOTUSE" }          
+                })
+
+            //set use
             await prisma.driverAddress.update({
                 where: { id: address.id 
                 } , 
                 data:  {address: newData.address,
                     lat: Number(newData.lat),
-                    long: Number(newData.long)}
+                    long: Number(newData.long)},
+                    status: "USE"
             })
+
         }   else {
-            console.log(2)
+
             await prisma.driverAddress.create({
                 data: {
                     driverId: Number(id),
                     address: newData.address,
                     lat: Number(newData.lat),
                     long: Number(newData.long),
-                    status: "NEW"
+                    status: "USE"
 
                 }
             })             
