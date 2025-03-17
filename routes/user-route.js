@@ -11,7 +11,10 @@ const { authUser } = require("../middlewares/auth-user");
 router.post("/booking/create", authCheck, bookingController.createBooking);
 router.get("/booking/get", authCheck, bookingController.getBooking);
 router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
-router.post("/review", authUser,reviewController.createReview)
+
+router.post("/review",reviewController.createReview)
+router.get("/review/:id", reviewController.getReviewById);
+
 
 
 router.get('/me',authCheck,userController.showUser)
