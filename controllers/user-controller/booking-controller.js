@@ -113,3 +113,44 @@ exports.cancelBooking = async (req, res, next) => {
   }
 }
 
+
+// Hospital
+exports.getHospital = async (req,res,next) =>{
+  try {
+    const hospital = await prisma.hospital.findMany({
+      select:{
+        id : true,
+        name : true,
+        address: true,
+        lat: true,
+        long: true,
+
+      }
+    })
+    
+    res.status(200).json(hospital)
+
+  } catch (error) {
+    next(error)
+  }
+
+}
+
+// UserAddress
+exports.getUserAddress = async (req,res,next) =>{
+  try {
+    const userId = req.user.id
+    console.log(userId, "userId");
+    
+    const userAddress = await prisma.userAddress.findMany({
+      where : {
+        userId : userId
+      }
+    })
+    console.log('userAddress', userAddress)
+    res.status(200).json(userAddress)
+
+  } catch (error) {
+    
+  }
+}
