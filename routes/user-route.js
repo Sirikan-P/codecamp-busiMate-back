@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require('../controllers/user-controller/user-controller')  
 const bookingController = require("../controllers/user-controller/booking-controller");
+
 const { authCheck } = require("../middlewares/authCheck");
 
 router.post("/booking/create", authCheck, bookingController.createBooking);

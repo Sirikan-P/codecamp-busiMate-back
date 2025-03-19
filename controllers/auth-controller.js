@@ -36,11 +36,6 @@ module.exports.registerUser = async (req, res) => {
         .json({ success: false, message: "Email already exists" });
     }
 
-    const payload = { email };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "15d",
-    });
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -53,6 +48,14 @@ module.exports.registerUser = async (req, res) => {
     };
 
     const result = await prisma.user.create({ data: newUser });
+    const userId = result.id;
+    const role = result.role;
+
+    const payload = { email, id: userId, role };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "15d",
+    });
+
     res.json({ success: true, message: "Register successful", result, token });
   } catch (error) {
     console.log("Error in register user controller:", error.message);
@@ -98,11 +101,6 @@ module.exports.registerDriver = async (req, res) => {
 
     const parsedAge = parseInt(age, 10);
 
-    const payload = { email };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "15d",
-    });
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -117,7 +115,20 @@ module.exports.registerDriver = async (req, res) => {
     };
 
     const result = await prisma.driver.create({ data: newUser });
-    res.json({ success: true, message: "Register successful", result, token });
+    const userId = result.id;
+    const role = result.role;
+
+    const payload = { email, id: userId, role };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "15d",
+    });
+
+    res.json({
+      success: true,
+      message: "Register successful",
+      result,
+      token,
+    });
   } catch (error) {
     console.log("Error in register driver controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
