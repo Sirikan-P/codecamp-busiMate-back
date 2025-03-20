@@ -49,8 +49,8 @@ model Message {
   receiverUser     User?    @relation("UserReceivedMessages", fields: [receiverUserId], references: [id])
   receiverDriverId Int?
   receiverDriver   Driver?  @relation("DriverReceivedMessages", fields: [receiverDriverId], references: [id])
-  bookingId        Int     @unique
-  booking          Booking @relation(fields: [bookingId], references: [id])
+  bookingId        Int      @unique
+  booking          Booking  @relation(fields: [bookingId], references: [id])
   text             String?  @db.Text
   image            String?
   createdAt        DateTime @default(now()) @db.Timestamp(0)
@@ -71,7 +71,7 @@ model Driver {
   age              Int
   gender           Gender
   phoneNumber      String
-  profileImageUrl  String?
+  profileImageUrl  String?         @db.VarChar(500)
   idCard           String?
   carRegNo         String?         @map("car_reg_no")
   carType          CarType?

@@ -8,7 +8,7 @@ const { authCheck } = require("../middlewares/authCheck")
  
 
 // @ENDPOINT http://localhost:8877/api/admin/...
-router.get("/dashboard/userData", adminAuth, adminDashboardController.getUserData)
+router.get("/dashboard/bookingDataByDate", adminAuth, adminDashboardController.getBookingDataByDate)
 router.get("/dashboard/paymentData", adminAuth, adminDashboardController.getPaymentData)
 router.get("/user/getUserDataAll", adminAuth, adminUserController.getUserDataAll)
 router.patch("/user/updateUserData/:id", adminAuth, adminUserController.updateUserData)
