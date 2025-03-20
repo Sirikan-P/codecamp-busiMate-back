@@ -247,9 +247,47 @@ module.exports.updateProfile = async (req, res) => {
 
 module.exports.checkAuth = async (req, res) => {
   try {
-    res.status(200).json(req.user);
+    const userId = req.user.id;
+
+    let result = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (result) {
+      return res.status(200).json({ result });
+    }
+
+    result = await prisma.driver.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        age: true,
+        gender: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (result) {
+      return res.status(200).json({ result });
+    }
+    return res.status(404).json({ message: "User or driver not found" });
   } catch (error) {
-    console.log("Error in checkAuth controller", error.message);
+    console.log("Error in checkAuth controller:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

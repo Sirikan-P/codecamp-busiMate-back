@@ -12,7 +12,12 @@ module.exports.authUser = async (req, res, next) => {
 
   try {
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: token_decode.id };
+    req.user = {
+      id: token_decode.id,
+      email: token_decode.email,
+      role: token_decode.role,
+    };
+    console.log("Authenticated user:", req.user);
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
