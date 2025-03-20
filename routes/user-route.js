@@ -14,6 +14,9 @@ router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
 
 router.post("/review",authCheck,reviewController.createReview)
 router.get("/review/:id",authCheck,reviewController.getReviewById);
+router.get("/review/driver/:driverId",authCheck,reviewController.getReviewByDriverId);
+router.get("/review/driver/:driverId/average",authCheck,reviewController.getAverageDriverRating);
+
 
 
 
