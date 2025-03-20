@@ -12,8 +12,8 @@ router.post("/booking/create", authCheck, bookingController.createBooking);
 router.get("/booking/get", authCheck, bookingController.getBooking);
 router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
 
-router.post("/review",reviewController.createReview)
-router.get("/review/:id", reviewController.getReviewById);
+router.post("/review",authCheck,reviewController.createReview)
+router.get("/review/:id",authCheck,reviewController.getReviewById);
 
 
 
