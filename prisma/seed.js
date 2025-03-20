@@ -607,13 +607,31 @@ const Hospital = [
 const Review = [
   {
     rate: "A",
-    message: "ดีมากครับ",
+    message: "คนขับสุภาพ บริการดี ชำนาญทาง คุณแม่ชอบมากครับ",
     bookingId: 1,
   },
   {
     rate: "B",
-    message: "ดีมากครับ",
-    bookingId: 1,
+    message: "บริการดี",
+    bookingId: 2,
+  },
+
+  {
+    rate: "C",
+    message: "รถมีของเยอะ แต่คนขับบริการดี",
+    bookingId: 3,
+  },
+
+  {
+    rate: "D",
+    message: "ผิดทาง ทั้งขาไปขากลับ",
+    bookingId: 4,
+  },
+
+  {
+    rate: "E",
+    message: "คนขับร้องเพลงตลอดทาง รบกวนผู้โดยสาร เสียงก็ไม่ดี รับไม่ได้แย่มาก",
+    bookingId: 5,
   },
 ];
 
