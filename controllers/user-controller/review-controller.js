@@ -77,8 +77,7 @@ module.exports.getReviewByDriverId = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Review fetched successfully",
-      driver: driver,
-      data: results,
+      result: {data:results,driver:driver}
     });
 
   } catch (error) {
@@ -124,7 +123,7 @@ module.exports.getAverageDriverRating = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Review fetched successfully",
-      Average: averageRate
+      result: averageRate
     });
 
   } catch (error) {
