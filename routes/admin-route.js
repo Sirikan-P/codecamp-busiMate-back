@@ -17,9 +17,9 @@ router.get("/user/getDriverDataAll", adminAuth, adminUserController.getDriverDat
 router.get("/user/findDriverByName", adminAuth, adminUserController.findDriverByName)
 router.patch("/user/updateDriverData/:id", adminAuth, adminUserController.updateDriverData)
 router.patch("/user/deleteDriver/:id", adminAuth, adminUserController.deleteDriver)
-router.post("/report/createFeedbackReport", adminAuth, adminReportController.createFeedbackReport)
-router.get("/report/getAllFeedbackReport", adminAuth, adminReportController.getAllFeedbackReport)
-router.get("/report/getFeedbackReportById/:id", adminAuth, adminReportController.getFeedbackReportById)
-router.patch("/report/updateFeedbackReportById/:id", adminAuth, adminReportController.updateFeedbackReportById)
+router.post("/report/createFeedbackReport",  adminReportController.createFeedbackReport)
+router.get("/report/getAllFeedbackReport", adminReportController.getAllFeedbackReport)
+router.get("/report/getFeedbackReportById/:id",  adminReportController.getFeedbackReportById)
+router.patch("/report/updateFeedbackReportById/:id", adminReportController.updateFeedbackReportById)
 
 module.exports = router
