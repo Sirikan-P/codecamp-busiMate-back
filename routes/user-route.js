@@ -7,7 +7,7 @@ const bookingController = require("../controllers/user-controller/booking-contro
 const { authCheck } = require("../middlewares/authCheck");
 const reviewController = require("../controllers/user-controller/review-controller")
 const { authUser } = require("../middlewares/auth-user");
-const upload = require("../middlewares/multer");
+const upload = require("../middlewares/upload");
 
 
 
