@@ -39,9 +39,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", async (messageData) => {
-    console.log(
-      `Recieve message from event 'sendMessage' in chatId: ${messageData.senderId}`
-    );
     try {
       const { senderId, receiverId, text, image, recipientType, role } =
         messageData;
@@ -51,21 +48,35 @@ io.on("connection", (socket) => {
         where: {
           OR: [
             {
-              patient: { userId: role === "user" ? senderId : receiverId },
-              driverId: role === "user" ? receiverId : senderId,
+              patient: {
+                userId:
+                  role === "user" ? parseInt(senderId) : parseInt(receiverId),
+              },
+              driverId:
+                role === "user" ? parseInt(receiverId) : parseInt(senderId),
             },
             {
-              patient: { userId: role === "user" ? receiverId : senderId },
-              driverId: role === "user" ? senderId : receiverId,
+              patient: {
+                userId:
+                  role === "user" ? parseInt(receiverId) : parseInt(senderId),
+              },
+              driverId:
+                role === "user" ? parseInt(senderId) : parseInt(receiverId),
             },
           ],
+          bookingStatus: { not: "COMPLETE" },
         },
         select: { id: true },
       });
 
       if (!booking) {
-        console.log("No shared booking found for:", { senderId, receiverId });
-        socket.emit("messageError", { error: "No shared booking found" });
+        console.log("No active shared booking found for:", {
+          senderId,
+          receiverId,
+        });
+        socket.emit("messageError", {
+          error: "No active shared booking found",
+        });
         return;
       }
 
@@ -75,7 +86,6 @@ io.on("connection", (socket) => {
         imageUrl = uploadResponse.secure_url;
       }
 
-      console.log("Before insert new message");
       const newMessage = await prisma.message.create({
         data: {
           text,
@@ -90,11 +100,21 @@ io.on("connection", (socket) => {
         },
       });
 
-      console.log("After insert message");
-
-      // Emit to the booking room instead of just the receiver's socket ID
       io.to(booking.id).emit("newMessage", newMessage);
+      const receiverSocketId = useSocketMap[receiverId];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("newMessage", newMessage);
+        console.log(
+          `Directly emitted to receiver ${receiverId} at socket ${receiverSocketId}`
+        );
+      }
       console.log(`Emitted newMessage to room ${booking.id}:`, newMessage);
+
+      const clientsInRoom = io.sockets.adapter.rooms.get(booking.id);
+      console.log(
+        `Clients in room ${booking.id}:`,
+        clientsInRoom ? [...clientsInRoom] : "No clients"
+      );
     } catch (error) {
       console.error("Error in sendMessage:", error.message, error.stack);
       socket.emit("messageError", {
