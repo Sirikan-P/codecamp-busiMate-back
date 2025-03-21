@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const userController = require('../controllers/user-controller/user-controller')  
@@ -28,9 +27,12 @@ router.post("/booking/finddriver",authCheck, bookingController.findDriver);
 
 router.get('/me',authCheck,userController.showUser)
 router.patch('/me/edit',authCheck,userController.editUser)
+router.post('/me/profile/upload',authCheck,upload.single('profileImageUrl'),userController.editProfileImage)
 router.post('/patient/add',authCheck,userController.addPatients)
-router.patch('/patient/edit',authCheck,userController.editPatients)
+router.patch('/patient/edit/:id',authCheck,userController.editPatients)
 router.get('/patient',authCheck,userController.getPatients)
+router.get('/patient/:id',authCheck,userController.getByPatientId)
+router.patch('/patient/edit',authCheck,userController.editPatients)
 
 // @ENDPOINT http://localhost:8877/api/user/...
 //
