@@ -72,7 +72,8 @@ model Driver {
   age              Int
   gender           Gender
   phoneNumber      String
-  profileImageUrl  String?
+  profileImageUrl  String?         @db.VarChar(500)
+  Description      String?  
   idCard           String?
   carRegNo         String?         @map("car_reg_no")
   carType          CarType?
@@ -150,6 +151,7 @@ model Patient {
   lastName        String    @map("lastname")
   age             Int
   gender          Gender
+  profileImage     String?
   phoneNumber     String    @map("phone_number")
   healthCondition String?
   createdAt       DateTime  @default(now()) @map("created_at")

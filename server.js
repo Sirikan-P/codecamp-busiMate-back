@@ -5,13 +5,28 @@ const morgan = require("morgan");
 const notFound = require("./middlewares/notFound");
 const handleErrors = require("./middlewares/error");
 
+
+const app = express();
+
+//-----------------------------
+const { createServer} = require('http')
+const { Server } = require('socket.io')
+
+const server = createServer(app);
+const io = new Server(server,{
+  cors:{
+    origin: 'http://localhost:5173'
+  }
+});
+
+
 // Import Routing
 const authRouter = require("./routes/auth-route");
 const userRouter = require("./routes/user-route");
 const driverRouter = require("./routes/driver-route");
 const adminRouter = require("./routes/admin-route");
+const notiService = require("./utils/notiService");
 
-const app = express();
 
 // Middlewares
 app.use(
@@ -29,12 +44,17 @@ app.use("/api/user", userRouter);
 app.use("/api/driver", driverRouter);
 app.use("/api/admin", adminRouter);
 
+
+
 // Not found
 app.use(notFound);
 
 // Middleware Error
 app.use(handleErrors);
 
+//socket -- create event
+notiService(io)
+
 // Start server
 const port = process.env.PORT || 8888;
-app.listen(port, () => console.log("Server is running on", port));
+server.listen(port, () => console.log("Server is running on", port));

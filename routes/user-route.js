@@ -3,8 +3,12 @@ const express = require("express");
 const router = express.Router();
 const userController = require('../controllers/user-controller/user-controller')  
 const bookingController = require("../controllers/user-controller/booking-controller");
+
 const { authCheck } = require("../middlewares/authCheck");
-const upload = require("../middlewares/upload");
+const reviewController = require("../controllers/user-controller/review-controller")
+const { authUser } = require("../middlewares/auth-user");
+const upload = require("../middlewares/multer");
+
 
 
 router.post("/booking/create", authCheck, upload.single("appointmentImage"),bookingController.createBooking);
