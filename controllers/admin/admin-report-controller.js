@@ -30,29 +30,22 @@ module.exports.createFeedbackReport = async (req, res) => {
 
 module.exports.getAllFeedbackReport = async (req, res) => {
   try {
-    const { id } = req.params; // รับค่า id จาก URL
-
-    const review = await prisma.report.findUnique({
-      where: { id: Number(id) }, // แปลง id เป็นตัวเลข
-      include: { booking: true }, // JOIN Booking
+    
+    const report = await prisma.report.findMany();
+    res.status(200).json({
+      success: true,
+      data: report,
     });
 
     if (!report) {
-      return res.status(404).json({ success: false, message: "Review not found" });
+      return res.status(404).json({ success: false, message: "Feedback Not Found" });
     }
-
-    res.status(200).json({
-      success: true,
-      message: "Review fetched successfully",
-      data: review,
-    });
 
   } catch (error) {
     console.error("Error:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 
 
