@@ -1,17 +1,18 @@
 const prisma = require("../configs/prisma")
 const createError = require('../utils/createError');
 
-const stripe = require('stripe')('sk_test_51QzCc807JCuZBtxv0GZGm9E6YV4N1MYH6zvutZTpcAvmO5N0po0Y1mYooP3qKkBtn9AZi4octHqcepQMzySKbDIk00BeEjNVBa')
+const stripe = require('stripe')('sk_test_51R4xmxBBt2acnoHhH6yP6Dl5oCmifTUhXudU8GhHZdtn5oQN9wOVLcpWKV0LBrsmcGAyocAUecOEjN0f141vjNer009a5tSikW')
 
 exports.checkOut = async (req, res, next) => {
   try {
+
     //bookingid 
     const { id } = req.body;
-    //console.log("payment order", id)
+    
     const booking = await prisma.booking.findFirst({
       where: { id: parseInt(id) } 
     });
-
+    
     //stripe --
     const session = await stripe.checkout.sessions.create({
       ui_mode: 'embedded',
@@ -33,6 +34,7 @@ exports.checkOut = async (req, res, next) => {
       return_url: `http://localhost:5173/user/complete/{CHECKOUT_SESSION_ID}`, //** wait for front-ent */
     });
 
+     console.log('ss',session)
     res.send({ clientSecret: session.client_secret });
   } catch (error) {
     next(error)
@@ -53,7 +55,7 @@ exports.checkOutStatus = async (req, res, next) => {
     }
 
     // console.log(session) 
-    // console.log("orderId",orderId) 
+    console.log("bookingId",bookingId) 
 
     // update order status-----------------------
     const result = await prisma.booking.update({

@@ -50,8 +50,6 @@ exports.editUser = async (req, res, next) => {
 };
 
 exports.getPatients = async (req, res, next) => {
-
-
     try {
         const userId = req.user.id;
         const patients = await prisma.patient.findMany({
@@ -193,3 +191,4 @@ console.log(req.file);
         next(error);
     }
 };
+
