@@ -64,6 +64,8 @@ exports.createBooking = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     next(error);
+  }finally{
+    fs.unlinkSync(req.file.path);
   }
 };
 
