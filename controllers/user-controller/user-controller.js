@@ -1,4 +1,7 @@
 const prisma = require("../../configs/prisma")
+const cloudinary = require('../../configs/cloudinary')
+const path = require('path')
+const fs = require('fs/promises')
 
 exports.showUser = async (req, res, next) => {
     try {
@@ -24,19 +27,19 @@ exports.showUser = async (req, res, next) => {
 };
 exports.editUser = async (req, res, next) => {
     try {
-        const { id, firstName, lastName, phoneNumber } = req.body;
+        const userId = req.user.id;
+        const {  firstName, lastName, phoneNumber, email, address } = req.body;
         console.log(req.body);
 
-        if (!id) {
-            return res.status(400).json({ error: "จำเป็นต้องระบุ ID ผู้ใช้" });
-        }
 
         const updatedUser = await prisma.user.update({
-            where: { id },
+            where: {id: userId },
             data: {
                 firstName: firstName,
                 lastName: lastName,
                 phoneNumber: phoneNumber,
+                email: email,
+                address: address,
             },
         });
         res.json({ msg: "อัปเดตผู้ใช้สำเร็จ", updatedUser });
@@ -47,6 +50,8 @@ exports.editUser = async (req, res, next) => {
 };
 
 exports.getPatients = async (req, res, next) => {
+
+
     try {
         const userId = req.user.id;
         const patients = await prisma.patient.findMany({
@@ -79,6 +84,7 @@ exports.getByPatientId = async (req, res, next) => {
                 firstName: true,
                 lastName: true,
                 phoneNumber: true,
+                age: true,
                 healthCondition: true,
             }
             
@@ -128,7 +134,8 @@ exports.addPatients = async (req, res, next) => {
 };
 exports.editPatients = async (req, res, next) => {
     try {
-        const { id, firstName, lastName, phoneNumber, age, gender, healthCondition } = req.body
+        const { firstName, lastName, phoneNumber, age, healthCondition } = req.body
+        const { id } = req.params;
         const patient = await prisma.patient.findUnique({
             where: {
                 id: Number(id)
@@ -136,10 +143,6 @@ exports.editPatients = async (req, res, next) => {
         })
         if (!patient) {
             return res.status(404).json({ error: "Patient not found" });
-        }
-        const parsedAge = parseInt(age);
-        if (isNaN(parsedAge)) {
-            return res.status(400).json({ error: "Age must be a valid number" });
         }
         const updatedPatient = await prisma.patient.update({
             where: {
@@ -149,8 +152,7 @@ exports.editPatients = async (req, res, next) => {
                 firstName: firstName,
                 lastName: lastName,
                 phoneNumber: phoneNumber,
-                age: parsedAge,
-                gender: gender,
+                age: Number(age),
                 healthCondition: healthCondition
             }
         })
@@ -159,3 +161,35 @@ exports.editPatients = async (req, res, next) => {
         next(error)
     }
 }
+exports.editProfileImage = async (req, res, next) => {
+    try {
+console.log(req.file);
+
+        const haveFile = !!req.file
+                let uploadResult = {}
+                if (haveFile) {
+                    uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                        overwrite: true,
+                        folder: 'busiMateDriver',
+                        public_id: path.parse(req.file.path).name
+                    })
+        
+                    fs.unlink(req.file.path)
+                }
+  console.log(uploadResult);
+
+
+
+        const userId = req.user.id;
+       
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                profileImage: uploadResult.url,
+            },
+        });
+        res.json({ msg: "อัปเดตผู้ใช้สำเร็จ", updatedUser });
+    } catch (error) {
+        next(error);
+    }
+};
