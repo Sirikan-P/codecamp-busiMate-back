@@ -9,6 +9,7 @@ const {
   adminLogin,
 } = require("../controllers/auth-controller");
 const { authUser } = require("../middlewares/auth-user");
+const upload = require("../middlewares/upload");
 
 const router = express.Router();
 
@@ -18,7 +19,12 @@ router.post("/login-user", loginUser);
 router.post("/login-driver", loginDriver);
 router.post("/login-admin", adminLogin);
 
-router.put("/update-profile", authUser, updateProfile);
+router.put(
+  "/update-userprofile",
+  authUser,
+  upload.single("profilePic"),
+  updateProfile
+);
 
 router.get("/check", authUser, checkAuth);
 

@@ -49,8 +49,8 @@ model Message {
   receiverUser     User?    @relation("UserReceivedMessages", fields: [receiverUserId], references: [id])
   receiverDriverId Int?
   receiverDriver   Driver?  @relation("DriverReceivedMessages", fields: [receiverDriverId], references: [id])
-  bookingId        Int     @unique
-  booking          Booking @relation(fields: [bookingId], references: [id])
+  bookingId        Int
+  booking          Booking  @relation(fields: [bookingId], references: [id])
   text             String?  @db.Text
   image            String?
   createdAt        DateTime @default(now()) @db.Timestamp(0)
@@ -88,8 +88,6 @@ model Driver {
   receivedMessages Message[]       @relation("DriverReceivedMessages")
   DriverWallet     DriverWallet[]
   DriverAddress    DriverAddress[]
-
-  reviews            Review[]
 
   @@map("driver")
 }
@@ -191,7 +189,6 @@ enum BookingStatus {
   UP_COMING
   IN_PROCESS
   COMPLETE
-  CANCEL
 }
 
 enum Request {
@@ -223,14 +220,9 @@ model Review {
   message   String?
   booking   Booking? @relation(fields: [bookingId], references: [id])
   bookingId Int?
-  userId  Int      @map("userId")
-  
-  driverId  Int
-  driver    Driver?   @relation(fields: [driverId], references: [id], onDelete: Cascade)
 
   @@map("review")
 }
-
 
 enum Rate {
   A

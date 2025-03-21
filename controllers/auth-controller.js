@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const prisma = require("../models");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../configs/cloudinary");
+const fs = require("fs").promises;
 
 module.exports.registerUser = async (req, res) => {
   const { firstName, lastName, email, password, phoneNumber } = req.body;
@@ -158,7 +159,7 @@ module.exports.loginUser = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    const payload = { id: user.id };
+    const payload = { id: user.id, email: user.email, role: user.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "15d",
     });
@@ -194,7 +195,7 @@ module.exports.loginDriver = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    const payload = { id: user.id };
+    const payload = { id: user.id, email: user.email, role: user.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "15d",
     });
@@ -235,32 +236,118 @@ module.exports.adminLogin = async (req, res) => {
 
 module.exports.updateProfile = async (req, res) => {
   try {
-    const { profilePic } = req.body;
-    const userId = req.user.id;
+    console.log("Request received for updateProfile:", {
+      userId: req.user?.id,
+      file: req.file,
+    });
 
-    if (!profilePic) {
-      return res.status(400).json({ message: "Profile pic is required" });
+    const userId = req.user.id;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized: User ID not found" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No image file uploaded" });
+    }
+
+    const profilePic = req.file.path;
+    console.log("File path to upload:", profilePic);
+
+    await fs.access(profilePic).catch((err) => {
+      throw new Error(`File not found: ${profilePic} - ${err.message}`);
+    });
+
+    console.log("Cloudinary config:", {
+      cloud_name: cloudinary.config().cloud_name,
+      api_key: cloudinary.config().api_key,
+      api_secret: !!cloudinary.config().api_secret,
+    });
+
+    let uploadResponse;
+    try {
+      uploadResponse = await cloudinary.uploader.upload(profilePic, {
+        folder: "profile_images",
+      });
+    } catch (cloudinaryError) {
+      throw new Error(`Cloudinary upload failed: ${cloudinaryError.message}`);
+    }
+    console.log("Cloudinary upload response:", uploadResponse);
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { profilePic: uploadResponse.secure_url },
+      data: { profileImage: uploadResponse.secure_url },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profileImage: true,
+      },
     });
-    res
-      .status(200)
-      .json({ success: true, message: "Profile updated", data: updatedUser });
+    console.log("Updated user:", updatedUser);
+
+    await fs
+      .unlink(profilePic)
+      .catch((err) => console.error("Failed to delete temp file:", err));
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
   } catch (error) {
-    console.log("Error in update profile:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.log("Error in update profile:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 module.exports.checkAuth = async (req, res) => {
   try {
-    res.status(200).json(req.user);
+    const userId = req.user.id;
+
+    let result = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (result) {
+      return res.status(200).json({ result });
+    }
+
+    result = await prisma.driver.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        age: true,
+        gender: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (result) {
+      return res.status(200).json({ result });
+    }
+    return res.status(404).json({ message: "User or driver not found" });
   } catch (error) {
-    console.log("Error in checkAuth controller", error.message);
+    console.log("Error in checkAuth controller:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

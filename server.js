@@ -10,8 +10,9 @@ const authRouter = require("./routes/auth-route");
 const userRouter = require("./routes/user-route");
 const driverRouter = require("./routes/driver-route");
 const adminRouter = require("./routes/admin-route");
-
-const app = express();
+const messageUserRouter = require("./routes/message-user-route");
+const messageDriverRouter = require("./routes/message-driver-route");
+const { app, server } = require("./configs/socket");
 
 // Middlewares
 app.use(
@@ -28,7 +29,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/driver", driverRouter);
 app.use("/api/admin", adminRouter);
-
+app.use("/api/messages-user", messageUserRouter);
+app.use("/api/messages-driver", messageDriverRouter);
 // Not found
 app.use(notFound);
 
@@ -36,5 +38,5 @@ app.use(notFound);
 app.use(handleErrors);
 
 // Start server
-const port = process.env.PORT || 8888;
-app.listen(port, () => console.log("Server is running on", port));
+const port = process.env.PORT || 8877;
+server.listen(port, () => console.log("Server is running on", port));

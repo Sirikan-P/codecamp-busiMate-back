@@ -12,20 +12,20 @@ module.exports.authUser = async (req, res, next) => {
 
   try {
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = {
+    req.driver = {
       id: token_decode.id,
       email: token_decode.email,
       role: token_decode.role,
     };
     next();
   } catch (error) {
-    console.log("Error in authUser middleware:", error.message);
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ success: false, message: "Token expired" });
     }
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ success: false, message: "Invalid token" });
     }
+    console.log("Error in authUser middleware:", error.message);
     res.status(500).json({
       message: "Internal server error",
     });

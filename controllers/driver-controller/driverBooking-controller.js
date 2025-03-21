@@ -84,3 +84,29 @@ exports.showDetail = async (req, res, next) => {
     next(error)
   }
 }
+
+exports.getBookingForChat = async (req, res, next) => {
+  try {
+    const driverId = req.user.id;
+    const userId = parseInt(req.params.userId);
+
+    const booking = await prisma.booking.findFirst({
+      where: {
+        OR: [
+          { patient: { userId: userId }, driverId: driverId },
+          { patient: { userId: driverId }, driverId: userId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!booking) {
+      return next(createError(404, "No shared booking found between driver and user"));
+    }
+
+    res.status(200).json({ bookingId: booking.id });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
