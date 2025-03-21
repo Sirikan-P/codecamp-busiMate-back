@@ -12,6 +12,11 @@ const upload = require("../middlewares/upload");
 
 
 router.post("/booking/create", authCheck, upload.single("appointmentImage"),bookingController.createBooking);
+router.post("/review",authCheck,reviewController.createReview)
+router.get("/review/:id",authCheck,reviewController.getReviewById);
+router.get("/review/driver/:driverId",authCheck,reviewController.getReviewByDriverId);
+router.get("/review/driver/:driverId/average",authCheck,reviewController.getAverageDriverRating);
+
 router.get("/booking/get", authCheck, bookingController.getBooking);
 router.get("/booking/get/:id", authCheck, bookingController.getOneBooking);
 router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
