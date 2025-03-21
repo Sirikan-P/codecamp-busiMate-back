@@ -2,10 +2,19 @@ const prisma = require("../../configs/prisma")
 
 exports.showUser = async (req, res, next) => {
     try {
+        const userId = req.user.id;
         const users = await prisma.user.findFirst({
             where: {
-                role: "user",
+                id: userId,
+            },
+            select: {
+                id: true,
+                firstName: true,    
+                lastName: true,
+                phoneNumber: true,
+                role: true,
             }
+
         });
         console.log(users);
         res.json({ msg: "Show users", users });
@@ -36,6 +45,29 @@ exports.editUser = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.getPatients = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const patients = await prisma.patient.findMany({
+            where: {
+                userId: userId,
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                age: true,
+                gender: true,
+                healthCondition: true,
+            }
+        });
+        res.json({ msg: "Show patients", patients });
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.addPatients = async (req, res, next) => {
     try {
         const userId = req.user.id;
