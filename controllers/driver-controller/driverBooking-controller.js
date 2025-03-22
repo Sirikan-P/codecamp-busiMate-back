@@ -43,7 +43,7 @@ exports.showAll = async (req, res, next) => {
   try {
     const driverId = parseInt(req.user.id);
     const { status } = req.query;
-
+    console.log("status ssss ",driverId,status)
     // ค้นหาคำสั่งจองคิวของคนขับ
     const allBooking = await prisma.booking.findMany({
       where: {
