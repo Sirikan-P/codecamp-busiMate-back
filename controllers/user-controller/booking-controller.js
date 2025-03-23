@@ -6,13 +6,28 @@ const multer = require("multer");
 const { log } = require("console");
 const { create } = require("domain");
 
-// create Booking
+
+const haversine = (lat1, lon1, lat2, lon2) => {
+  const toRad = (angle) => (Math.PI / 180) * angle;
+  const R = 6371; // รัศมีของโลก (กม.)
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 exports.createBooking = async (req, res, next) => {
   try {
-    // RECIVES IMAGE
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
+
     const img = await cloudinary.uploader.upload(req.file.path, {
       public_id: `${Date.now()}`,
       resource_type: "auto",
@@ -31,35 +46,131 @@ exports.createBooking = async (req, res, next) => {
       CarType,
     } = req.body;
 
-    console.log(hospitalId);
-    console.log(userAddressId);
-
     const user = await prisma.user.findUnique({ where: { id: +userId } });
     if (!user) return next(createError(404, "User not found"));
 
     const patient = await prisma.patient.findUnique({
-      where: { id: +patientId },
-    });
-
+      where: { id: +patientId } });
     if (!patient) return next(createError(404, "Patient not found"));
 
     const hospitalAddressId = JSON.parse(hospitalId);
     const userBookingAddressId = JSON.parse(userAddressId);
 
-    const newBooking = await prisma.booking.create({
-      data: {
-        needWheelChair,
-        needAssist,
-        appointmentDate,
-        appointmentImage: img.url, // ใช้ URL จาก Cloudinary
-        specialRequirement,
-        patientId: +patient.id,
-        hospitalId: +hospitalAddressId.id,
-        CarType,
-        userAddressId: +userBookingAddressId.id,
-        totalPrice: 3000,
+    // ดึงพิกัด userAddress
+    const userAddress = await prisma.userAddress.findFirst({
+      where: { id: userAddressId?.id },
+      select: { lat: true, long: true },
+    });
+
+
+    if (!userAddress) return next(createError(404, "User address not found"));
+
+    //Chack Available driver
+    const driverBooked = await prisma.booking.findMany({
+      where: {
+        appointmentDate: appointmentDate,
+        driverId: {
+          not: null,
+        }
+      },
+      select: {
+        driverId: true,
       },
     });
+    
+console.log(driverBooked);
+
+    // ดึงไดรเวอร์ทั้งหมดพร้อมพิกัด
+    const drivers = await prisma.driver.findMany({
+      where: {
+        id: {
+          notIn: driverBooked.map(booking => booking.driverId)
+        },
+        status: "ACTIVE",
+        online: "ONLINE",
+        DriverAddress: {
+          some: { // ใช้ `some` เพราะเราต้องการตรวจสอบอย่างน้อย 1 ที่มีพิกัด
+            lat: { not: null },
+            long: { not: null },
+            status : "USE"
+          },
+        },
+      },
+      select: {
+        id: true,
+        DriverAddress: {
+          select: {
+            lat: true,
+            long: true,
+          },
+        },
+      },
+  });
+    
+    console.log("drivers",drivers);
+
+   // กรองไดรเวอร์ที่อยู่ภายในรัศมี 10 กิโลเมตรจาก userAddress
+   const nearbyDrivers = drivers.filter((driver) => {
+    if (!driver.DriverAddress || driver.DriverAddress.length === 0) return false;
+    
+    const driverAddress = driver.DriverAddress[0]; // สมมติว่า DriverAddress มี 1 ตัว
+    const distance = haversine(
+      userAddress.lat,
+      userAddress.long,
+      driverAddress.lat,
+      driverAddress.long
+    );
+
+    return distance <= 10; // กรองเฉพาะไดรเวอร์ที่อยู่ในระยะ 10 กม.
+  });
+
+  if (nearbyDrivers.length === 0) {
+    return res.status(400).json({ error: "No available drivers within 10km" });
+  }
+
+  // สุ่มเลือก driverId ที่อยู่ใกล้ที่สุด
+  const selectedDriver = nearbyDrivers[Math.floor(Math.random() * nearbyDrivers.length)];
+console.log(selectedDriver,"selectedDriver");
+  // สร้าง booking
+
+  const driverAddress = await prisma.driverAddress.findFirst({
+    where: {
+      driverId: +selectedDriver.id,
+      status: "USE",
+    },
+    select: {
+      id: true,
+    },
+  });
+  console.log(driverAddress,"driverAddress");
+
+  const newBooking = await prisma.booking.create({
+    data: {
+      needWheelChair,
+      needAssist,
+      appointmentDate,
+      appointmentImage: img.url,
+      specialRequirement,
+      patientId: +patient.id,
+      hospitalId: +hospitalAddressId.id,
+      CarType,
+      userAddressId: +userBookingAddressId.id,
+      totalPrice: 3000,
+      driverId: +selectedDriver.id,// ใช้ driverId ที่เลือก
+      driverAddressId: driverAddress.id,
+    },
+include: {
+      patient: true,
+      driver: {
+        omit: {
+          password: true,
+        }
+      },
+      hospital: true,
+    },
+  });
+  console.log(newBooking,"newBooking");
+
 
     res.status(201).json(newBooking);
   } catch (error) {
@@ -67,6 +178,71 @@ exports.createBooking = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+
+// create Booking
+// exports.createBooking = async (req, res, next) => {
+//   try {
+//     // RECIVES IMAGE
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded" });
+//     }
+//     const img = await cloudinary.uploader.upload(req.file.path, {
+//       public_id: `${Date.now()}`,
+//       resource_type: "auto",
+//       folder: "BusiMate",
+//     });
+
+//     const userId = req.user.id;
+//     const {
+//       needWheelChair,
+//       needAssist,
+//       appointmentDate,
+//       specialRequirement,
+//       patientId,
+//       hospitalId,
+//       userAddressId,
+//       CarType,
+//     } = req.body;
+
+//     console.log(hospitalId);
+//     console.log(userAddressId);
+
+//     const user = await prisma.user.findUnique({ where: { id: +userId } });
+//     if (!user) return next(createError(404, "User not found"));
+
+//     const patient = await prisma.patient.findUnique({
+//       where: { id: +patientId },
+//     });
+
+//     if (!patient) return next(createError(404, "Patient not found"));
+
+//     const hospitalAddressId = JSON.parse(hospitalId);
+//     const userBookingAddressId = JSON.parse(userAddressId);
+
+//     const newBooking = await prisma.booking.create({
+//       data: {
+//         needWheelChair,
+//         needAssist,
+//         appointmentDate,
+//         appointmentImage: img.url, // ใช้ URL จาก Cloudinary
+//         specialRequirement,
+//         patientId: +patient.id,
+//         hospitalId: +hospitalAddressId.id,
+//         CarType,
+//         userAddressId: +userBookingAddressId.id,
+//         totalPrice: 3000,
+//       },
+//     });
+
+//     res.status(201).json(newBooking);
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
 
 // get all booking
 exports.getBooking = async (req, res, next) => {
@@ -86,7 +262,7 @@ exports.getBooking = async (req, res, next) => {
           in: patientIds,
         },
       },
-      include: {
+      include: {        
         patient: true,
         driver: true,
         hospital: true,
@@ -111,14 +287,7 @@ exports.getOneBooking = async (req, res, next) => {
     const oneBooking = await prisma.booking.findFirst({
       where: {
         id: bookingId,
-      },
-      include: {
-        patient: true,
-        driver: true,
-        hospital: true,
-        DriverAddress: true,
-        UserAddress: true,
-      },
+      }
     });
     if (!oneBooking) {
       return next(createError(404, "Booking not found"));
