@@ -144,6 +144,7 @@ module.exports = {
 
   loginUser: async (req, res) => {
     const { email, password } = req.body;
+    console.log(email)
     try {
       if (!email.trim() || !password.trim()) {
         return res

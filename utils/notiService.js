@@ -11,11 +11,13 @@ const notiService = (io) => {
     })
 
     socket.on('driver_noti',async  (data) => {
-      //console.log(data)
+      
       //if reject = set database booking status = FIND_DRIVER
       //if accept = set database booking status = UP_COMING
       const bookingStatus =  (data.result=='ACCEPT') ? "UP_COMING": "FIND_DRIVER"
-          // อัปเดตสถานะ 
+      console.log("hello noti from driver to user",bookingStatus)
+     
+      //อัปเดตสถานะ 
        await prisma.booking.update({
         where: { id: +data.bookingId },
         data: {
