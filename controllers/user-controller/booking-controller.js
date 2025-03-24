@@ -5,8 +5,6 @@ const fs = require("fs");
 const multer = require("multer");
 const { log } = require("console");
 
-
-
 exports.createBooking = async (req, res, next) => {
   try {
     // RECIVES IMAGE
@@ -42,8 +40,8 @@ exports.createBooking = async (req, res, next) => {
     });
     if (!patient) return next(createError(404, "Patient not found"));
 
-    const hospitalAddressId = JSON.parse(hospitalId)
-    const userBookingAddressId = JSON.parse(userAddressId)
+    const hospitalAddressId = JSON.parse(hospitalId);
+    const userBookingAddressId = JSON.parse(userAddressId);
 
     const newBooking = await prisma.booking.create({
       data: {
@@ -53,7 +51,7 @@ exports.createBooking = async (req, res, next) => {
         appointmentImage: img.url, // ใช้ URL จาก Cloudinary
         specialRequirement,
         patientId: +patient.id,
-        hospitalId : +hospitalAddressId.id,
+        hospitalId: +hospitalAddressId.id,
         CarType,
         userAddressId: +userBookingAddressId.id,
         totalPrice: 3000,
@@ -153,12 +151,7 @@ exports.findDriver = async (req, res, next) => {
     if (!userId) {
       return createError(404, "User not found");
     }
-    const {
-      needWheelChair,
-      needAssist,
-      appointmentDate,
-      CarType,
-    } = req.body;
+    const { needWheelChair, needAssist, appointmentDate, CarType } = req.body;
 
     console.log(req.body);
 
@@ -166,41 +159,43 @@ exports.findDriver = async (req, res, next) => {
     const WheelChair = needWheelChair === "NEED" ? "HAVE" : "NOHAVE";
 
     const driverBooked = await prisma.booking.findMany({
-      where:{
-        appointmentDate : appointmentDate
-      },select:{
-        driverId : true,
-      }
-    })
+      where: {
+        appointmentDate: appointmentDate,
+      },
+      select: {
+        driverId: true,
+      },
+    });
 
-// แปลงให้เป็นอาร์เรย์ของ driverId และกรองค่า null ออก
-const driverIds = driverBooked.map((booking) => booking.driverId).filter(id => id !== null);
+    // แปลงให้เป็นอาร์เรย์ของ driverId และกรองค่า null ออก
+    const driverIds = driverBooked
+      .map((booking) => booking.driverId)
+      .filter((id) => id !== null);
 
-// ตรวจสอบกรณีที่ไม่มี driver ที่ถูกจอง
-const whereCondition = {
-  status: "ACTIVE",
-  online: "ONLINE",
-  CarType: CarType,
-  OR: [
-    {
-      hasAssist: "HAVE",        // กรณีที่ต้องการ driver ที่มี assist
-      hasWheelChair: "HAVE",    // กรณีที่ต้องการ driver ที่มี wheelchair
-    },
-    {
-      hasAssist: "NOHAVE",      // หรือกรณีที่มี assist ไม่จำเป็น
-      hasWheelChair: "NOHAVE",  // หรือกรณีที่มี wheelchair ไม่จำเป็น
+    // ตรวจสอบกรณีที่ไม่มี driver ที่ถูกจอง
+    const whereCondition = {
+      status: "ACTIVE",
+      online: "ONLINE",
+      CarType: CarType,
+      OR: [
+        {
+          hasAssist: "HAVE", // กรณีที่ต้องการ driver ที่มี assist
+          hasWheelChair: "HAVE", // กรณีที่ต้องการ driver ที่มี wheelchair
+        },
+        {
+          hasAssist: "NOHAVE", // หรือกรณีที่มี assist ไม่จำเป็น
+          hasWheelChair: "NOHAVE", // หรือกรณีที่มี wheelchair ไม่จำเป็น
+        },
+      ],
+    };
+
+    if (driverIds.length > 0) {
+      whereCondition.id = { notIn: driverIds }; // ใส่เฉพาะถ้ามี driverIds
     }
-  ]
-};
 
-if (driverIds.length > 0) {
-  whereCondition.id = { notIn: driverIds }; // ใส่เฉพาะถ้ามี driverIds
-}
-
-const availableDrivers = await prisma.driver.findFirst({
-  where: whereCondition
-});
-
+    const availableDrivers = await prisma.driver.findFirst({
+      where: whereCondition,
+    });
 
     res.status(200).json(availableDrivers);
   } catch (error) {
@@ -241,4 +236,32 @@ exports.getUserAddress = async (req, res, next) => {
     console.log("userAddress", userAddress);
     res.status(200).json(userAddress);
   } catch (error) {}
+};
+
+exports.getBookingForChatUser = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const driverId = parseInt(req.params.driverId);
+
+    const booking = await prisma.booking.findFirst({
+      where: {
+        OR: [
+          { patient: { userId: userId }, driverId: driverId },
+          { patient: { userId: driverId }, driverId: userId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!booking) {
+      return next(
+        createError(404, "No shared booking found between user and driver")
+      );
+    }
+
+    res.status(200).json({ bookingId: booking.id });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 };

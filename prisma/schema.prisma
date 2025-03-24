@@ -50,7 +50,7 @@ model Message {
   receiverUser     User?    @relation("UserReceivedMessages", fields: [receiverUserId], references: [id])
   receiverDriverId Int?
   receiverDriver   Driver?  @relation("DriverReceivedMessages", fields: [receiverDriverId], references: [id])
-  bookingId        Int      @unique
+  bookingId        Int
   booking          Booking  @relation(fields: [bookingId], references: [id])
   text             String?  @db.Text
   image            String?
@@ -198,7 +198,6 @@ enum BookingStatus {
   UP_COMING
   IN_PROCESS
   COMPLETE
-  CANCEL
 }
 
 enum Request {
