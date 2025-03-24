@@ -5,7 +5,20 @@ const fs = require("fs");
 const multer = require("multer");
 const { log } = require("console");
 
-
+const haversine = (lat1, lon1, lat2, lon2) => {
+  const toRad = (angle) => (Math.PI / 180) * angle;
+  const R = 6371; // รัศมีของโลก (กม.)
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 exports.createBooking = async (req, res, next) => {
   try {
@@ -17,10 +30,8 @@ exports.createBooking = async (req, res, next) => {
       public_id: `${Date.now()}`,
       resource_type: "auto",
       folder: "BusiMate",
-    }
-  );
-  fs.unlinkSync(req.file.path);
-
+    });
+    fs.unlinkSync(req.file.path);
 
     const userId = req.user.id;
     const {
@@ -38,24 +49,125 @@ exports.createBooking = async (req, res, next) => {
     if (!user) return next(createError(404, "User not found"));
 
     const patient = await prisma.patient.findUnique({
-      where: { id: +patientId } });
+      where: { id: +patientId },
+    });
     if (!patient) return next(createError(404, "Patient not found"));
 
-    const hospitalAddressId = JSON.parse(hospitalId)
-    const userBookingAddressId = JSON.parse(userAddressId)
+    const hospitalAddressId = JSON.parse(hospitalId);
+    const userBookingAddressId = JSON.parse(userAddressId);
+
+    // ดึงพิกัด userAddress
+    const userAddress = await prisma.userAddress.findFirst({
+      where: { id: userAddressId?.id },
+      select: { lat: true, long: true },
+    });
+
+    if (!userAddress) return next(createError(404, "User address not found"));
+
+    //Chack Available driver
+    const driverBooked = await prisma.booking.findMany({
+      where: {
+        appointmentDate: appointmentDate,
+        driverId: {
+          not: null,
+        },
+      },
+      select: {
+        driverId: true,
+      },
+    });
+
+    // ดึงไดรเวอร์ทั้งหมดพร้อมพิกัด
+    const drivers = await prisma.driver.findMany({
+      where: {
+        id: {
+          notIn: driverBooked.map((booking) => booking.driverId),
+        },
+        status: "ACTIVE",
+        online: "ONLINE",
+        DriverAddress: {
+          some: {
+            // ใช้ `some` เพราะเราต้องการตรวจสอบอย่างน้อย 1 ที่มีพิกัด
+            lat: { not: null },
+            long: { not: null },
+            status: "USE",
+          },
+        },
+      },
+      select: {
+        id: true,
+        DriverAddress: {
+          select: {
+            lat: true,
+            long: true,
+          },
+        },
+      },
+    });
+
+    // กรองไดรเวอร์ที่อยู่ภายในรัศมี 10 กิโลเมตรจาก userAddress
+    const nearbyDrivers = drivers.filter((driver) => {
+      if (!driver.DriverAddress || driver.DriverAddress.length === 0)
+        return false;
+
+      const driverAddress = driver.DriverAddress[0]; // สมมติว่า DriverAddress มี 1 ตัว
+      const distance = haversine(
+        userAddress.lat,
+        userAddress.long,
+        driverAddress.lat,
+        driverAddress.long
+      );
+
+      return distance <= 10; // กรองเฉพาะไดรเวอร์ที่อยู่ในระยะ 10 กม.
+    });
+
+    if (nearbyDrivers.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "No available drivers within 10km" });
+    }
+
+    // สุ่มเลือก driverId ที่อยู่ใกล้ที่สุด
+    const selectedDriver =
+      nearbyDrivers[Math.floor(Math.random() * nearbyDrivers.length)];
+console.log("selectedDriver",selectedDriver);
+
+    // สร้าง booking
+    const driverAddress = await prisma.driverAddress.findFirst({
+      where: {
+        driverId: +selectedDriver.id,
+        status: "USE",
+      },
+      select: {
+        id: true,
+      },
+    });
+    console.log("driverAddress",driverAddress);
 
     const newBooking = await prisma.booking.create({
       data: {
         needWheelChair,
         needAssist,
         appointmentDate,
-        appointmentImage: img.url, // ใช้ URL จาก Cloudinary
+        appointmentImage: img.url,
         specialRequirement,
         patientId: +patient.id,
-        hospitalId : +hospitalAddressId.id,
+        hospitalId: +hospitalAddressId.id,
         CarType,
         userAddressId: +userBookingAddressId.id,
         totalPrice: 3000,
+        driverId: +selectedDriver.id, // ใช้ driverId ที่เลือก
+        driverAddressId: driverAddress.id,
+      },
+      include: {
+        patient: true,
+        driver: {
+          omit: {
+            password: true,
+          },
+        },
+        hospital: true,
+        UserAddress: true,
       },
     });
 
@@ -65,9 +177,6 @@ exports.createBooking = async (req, res, next) => {
     next(error);
   }
 };
-
-
-
 
 // create Booking
 // exports.createBooking = async (req, res, next) => {
@@ -149,7 +258,7 @@ exports.getBooking = async (req, res, next) => {
           in: patientIds,
         },
       },
-      include: {        
+      include: {
         patient: true,
         driver: true,
         hospital: true,
@@ -170,25 +279,26 @@ exports.getOneBooking = async (req, res, next) => {
     // if (!userId) {
     //   return next(createError(404, "User not found"));
     // }
-    const  {id}  = req.params;
+    const { id } = req.params;
     console.log(id);
     const oneBooking = await prisma.booking.findFirst({
       where: {
         id: +id,
-      },include: {
+      },
+      include: {
         patient: true,
         driver: true,
         hospital: true,
         UserAddress: true,
         DriverAddress: true,
-      }
+      },
     });
     console.log(oneBooking);
     if (!oneBooking) {
       return next(createError(404, "Booking not found"));
     }
 
-    console.log("oneBooking",oneBooking);
+    console.log("oneBooking", oneBooking);
     res.status(200).json(oneBooking);
     // res.staus(200).json(oneBooking);2
   } catch (error) {
@@ -231,12 +341,13 @@ exports.findDriver = async (req, res, next) => {
 
     // if(driverId){
     const driverBooked = await prisma.booking.findMany({
-      where:{
-        appointmentDate : appointmentDate
-      },select:{
-        driverId : true,
-      }
-    })
+      where: {
+        appointmentDate: appointmentDate,
+      },
+      select: {
+        driverId: true,
+      },
+    });
 
     // แปลงให้เป็นอาร์เรย์ของ driverId และกรองค่า null ออก
     const driverIds = driverBooked
@@ -264,10 +375,9 @@ exports.findDriver = async (req, res, next) => {
       whereCondition.id = { notIn: driverIds }; // ใส่เฉพาะถ้ามี driverIds
     }
 
-const availableDrivers = await prisma.driver.findFirst({
-  where: whereCondition
-});
-
+    const availableDrivers = await prisma.driver.findFirst({
+      where: whereCondition,
+    });
 
     res.status(200).json(availableDrivers);
   } catch (error) {
@@ -298,13 +408,12 @@ exports.findNewDriver = async (req, res, next) => {
           },
         ],
       },
-      
+
       include: {
         DriverAddress: true,
-      }
+      },
     });
     console.log("newDriver", newDriver);
-
 
     res.status(200).json(newDriver);
   } catch (error) {
@@ -316,7 +425,7 @@ exports.findNewDriver = async (req, res, next) => {
 exports.UpdateNewDriver = async (req, res, next) => {
   try {
     const { id, driverId } = req.body;
-    console.log("driverId",driverId);
+    console.log("driverId", driverId);
 
     const driverData = await prisma.driver.findUnique({
       where: {
@@ -324,35 +433,36 @@ exports.UpdateNewDriver = async (req, res, next) => {
       },
       omit: {
         password: true,
-      }
+      },
     });
 
     const updateDriverInBooking = await prisma.booking.update({
-      where:{
-        id : id
-      },data:{
-        driverId : driverId,
-       
-      }
-    }) 
+      where: {
+        id: id,
+      },
+      data: {
+        driverId: driverId,
+      },
+    });
 
     const Booking = await prisma.booking.findFirst({
       where: {
-        id : id
-      },include: {
+        id: id,
+      },
+      include: {
         patient: true,
         driver: true,
         hospital: true,
         DriverAddress: true,
         UserAddress: true,
-      }
-    })
+      },
+    });
 
-    console.log({message: "Update"});
+    console.log({ message: "Update" });
 
     res.status(200).json(Booking);
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
