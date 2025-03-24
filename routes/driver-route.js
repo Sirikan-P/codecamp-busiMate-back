@@ -9,12 +9,17 @@ const driverWalletController = require("../controllers/driver-controller/driverW
 //import validator
 
 //import middleware
-const { checkAuth } = require("../middlewares/authCheck");
+const { authCheck } = require("../middlewares/authCheck")
+const upload = require("../middlewares/upload")
 
 // @ENDPOINT http://localhost:8877/api/driver/...
 //my profile -------
-router.get("/me", checkAuth, driverController.currentDriver);
-router.patch("/me", checkAuth, driverController.updateProfile);
+router.get('/me', authCheck, driverController.currentDriver ) //authen for pages : verify token
+router.patch('/me',authCheck, upload.single('profileImageUrl'),driverController.updateProfile)
+//my address -------
+router.post('/address',authCheck, driverController.addDriverAddress)
+router.patch('/address',authCheck, driverController.updateDriverAddress)
+router.delete('/address/:id',authCheck, driverController.deleteDriverAddress)
 
 //my booking id -------
 router.get("/booking/:id", checkAuth, driverBookingController.showDetail);

@@ -64,11 +64,12 @@ exports.getDriverWalletDetails = async (req,res,next)=>{
     const driverId = parseInt(req.user.id);
 
     const driver = await prisma.driver.findUnique({
-      where: { id: driverId },
+      where: { id: driverId }, // driverId คือ ID ของคนขับที่ต้องการค้นหา
       select: {
-        wallet: true,
-        transactions: {
-          orderBy: { createdAt: "desc" },
+        id: true,
+        wallet: true, // ยอดเงินรวมของ driver
+        DriverWallet: { // เรียกดู transaction ทั้งหมดของ driver
+          orderBy: { createdAt: "desc" }, // เรียงตามวันที่ล่าสุด
           select: {
             id: true,
             amount: true,
