@@ -78,8 +78,6 @@ exports.createBooking = async (req, res, next) => {
       },
     });
     
-console.log(driverBooked);
-
     // ดึงไดรเวอร์ทั้งหมดพร้อมพิกัด
     const drivers = await prisma.driver.findMany({
       where: {
@@ -107,7 +105,6 @@ console.log(driverBooked);
       },
   });
     
-    console.log("drivers",drivers);
 
    // กรองไดรเวอร์ที่อยู่ภายในรัศมี 10 กิโลเมตรจาก userAddress
    const nearbyDrivers = drivers.filter((driver) => {
@@ -130,7 +127,6 @@ console.log(driverBooked);
 
   // สุ่มเลือก driverId ที่อยู่ใกล้ที่สุด
   const selectedDriver = nearbyDrivers[Math.floor(Math.random() * nearbyDrivers.length)];
-console.log(selectedDriver,"selectedDriver");
   // สร้าง booking
 
   const driverAddress = await prisma.driverAddress.findFirst({
@@ -142,7 +138,6 @@ console.log(selectedDriver,"selectedDriver");
       id: true,
     },
   });
-  console.log(driverAddress,"driverAddress");
 
   const newBooking = await prisma.booking.create({
     data: {
@@ -167,9 +162,10 @@ include: {
         }
       },
       hospital: true,
+      DriverAddress: true,
+      UserAddress: true,
     },
   });
-  console.log(newBooking,"newBooking");
 
 
     res.status(201).json(newBooking);
@@ -279,21 +275,31 @@ exports.getBooking = async (req, res, next) => {
 // GetOneBooking(with bookingID) after createbooking
 exports.getOneBooking = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    if (!userId) {
-      return next(createError(404, "User not found"));
-    }
-    const { bookingId } = req.params;
+    // const userId = req.user.id;
+    // if (!userId) {
+    //   return next(createError(404, "User not found"));
+    // }
+    const  {id}  = req.params;
+    console.log(id);
     const oneBooking = await prisma.booking.findFirst({
       where: {
-        id: bookingId,
+        id: +id,
+      },include: {
+        patient: true,
+        driver: true,
+        hospital: true,
+        UserAddress: true,
+        DriverAddress: true,
       }
     });
+    console.log(oneBooking);
     if (!oneBooking) {
       return next(createError(404, "Booking not found"));
     }
+
+    console.log("oneBooking",oneBooking);
     res.status(200).json(oneBooking);
-    // res.staus(200).json(oneBooking);
+    // res.staus(200).json(oneBooking);2
   } catch (error) {
     next(error);
   }
@@ -405,9 +411,10 @@ exports.findNewDriver = async (req, res, next) => {
           },
         ],
       },
-      select: {
-        id: true,
-      },
+      
+      include: {
+        DriverAddress: true,
+      }
     });
     console.log("newDriver", newDriver);
 
@@ -430,14 +437,15 @@ exports.UpdateNewDriver = async (req, res, next) => {
       },
       omit: {
         password: true,
-      },
+      }
     });
 
     const updateDriverInBooking = await prisma.booking.update({
       where:{
         id : id
       },data:{
-        driverId : +driverId,
+        driverId : driverId,
+       
       }
     }) 
 
@@ -448,10 +456,12 @@ exports.UpdateNewDriver = async (req, res, next) => {
         patient: true,
         driver: true,
         hospital: true,
+        DriverAddress: true,
+        UserAddress: true,
       }
     })
 
-    console.log(driverId,"driverId");
+    console.log({message: "Update"});
 
     res.status(200).json(Booking);
   } catch (error) {
