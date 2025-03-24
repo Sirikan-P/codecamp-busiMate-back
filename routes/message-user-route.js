@@ -9,10 +9,9 @@ const {
 
 const router = express.Router();
 
-// User-specific routes (mounted at /api/messages-user)
-router.get("/users", authUser, getUsersForSidebar); // /api/messages-user/users
-router.get("/user/:id", authUser, getMessagesUser); // /api/messages-user/user/:id
-router.post("/user/send/:id", authUser, sendMessageUser); // /api/messages-user/user/send/:id
+router.get("/users", authUser, getUsersForSidebar); 
+router.get("/user/:id", authUser, getMessagesUser); 
+router.post("/user/send/:id", authUser, sendMessageUser); 
 router.get("/booking/chat/:receiverId", authUser, bookingChatUser);
 
 module.exports = router;

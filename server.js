@@ -5,18 +5,7 @@ const morgan = require("morgan");
 const notFound = require("./middlewares/notFound");
 const handleErrors = require("./middlewares/error");
 
-// const app = express();
-
-//-----------------------------
-// const { createServer} = require('http')
-// const { Server } = require('socket.io')
 const { app, server, io } = require("./configs/socket");
-// const server = createServer(app);
-// const io = new Server(server,{
-//   cors:{
-//     origin: 'http://localhost:5173'
-//   }
-// });
 
 // Import Routing
 const authRouter = require("./routes/auth-route");
