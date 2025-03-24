@@ -1,27 +1,38 @@
 const jwt = require("jsonwebtoken");
-// jsonwebtoken: ใช้สำหรับตรวจสอบและถอดรหัส JWT (JSON Web Token)
 
-module.exports.adminAuth = async (req, res, next) => {
-  const authorization = req.headers.authorization;
+module.exports.authAdmin = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  // แยกส่วน token ออกจาก "Bearer "
-  if (!authorization || !authorization.startsWith("Bearer ")) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res
       .status(401)
-      .json({ success: false, message: "Not Authorized. Login Again" });
+      .json({ success: false, message: "Not Authorized: Invalid header" });
   }
-  const token = authorization.split(" ")[1];
+  const token = authHeader.split(" ")[1];
 
   try {
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    if (token_decode.email !== process.env.ADMIN_EMAIL) {
+    if (
+      token_decode.email !== process.env.ADMIN_EMAIL ||
+      token_decode.role !== "admin"
+    ) {
       return res
         .status(403)
-        .json({ success: false, message: "Forbidden. Admin Access Only" });
+        .json({ success: false, message: "Forbidden: Admin Access Only" });
     }
-    req.admin = token_decode;
+    req.admin = {
+      email: token_decode.email,
+      role: token_decode.role,
+    };
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: "Invalid token" });
+    console.log("Error in authAdmin middleware:", error.message);
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ success: false, message: "Token expired" });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
+    res.status(500).json({ message: "Internal server error" });
   }
 };

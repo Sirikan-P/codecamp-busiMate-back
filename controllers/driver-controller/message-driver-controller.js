@@ -3,8 +3,7 @@ const cloudinary = require("../../configs/cloudinary");
 
 module.exports.getUsersForSidebarDriver = async (req, res) => {
   try {
-    const loggedInDriverId = req.user.id;
-
+    const loggedInDriverId = req.driver.id;
     const driverBookings = await prisma.booking.findMany({
       where: {
         driverId: loggedInDriverId,
@@ -48,8 +47,8 @@ module.exports.getUsersForSidebarDriver = async (req, res) => {
 module.exports.getMessagesDriver = async (req, res) => {
   try {
     const { id: recipientId, recipientType } = req.params;
-    const myId = req.user.id;
-    const isDriver = req.user.role === "driver";
+    const myId = req.driver.id; // Change to req.driver.id
+    const isDriver = req.driver.role === "driver"; // Change to req.driver.role
 
     const bookings = await prisma.booking.findMany({
       where: {
@@ -114,15 +113,23 @@ module.exports.sendMessageDriver = async (req, res) => {
     const booking = await prisma.booking.findFirst({
       where: {
         OR: [
-          { patient: { userId: isDriver ? parseInt(receiverId) : senderId }, driverId: isDriver ? senderId : parseInt(receiverId) },
-          { patient: { userId: isDriver ? senderId : parseInt(receiverId) }, driverId: isDriver ? parseInt(receiverId) : senderId },
+          {
+            patient: { userId: isDriver ? parseInt(receiverId) : senderId },
+            driverId: isDriver ? senderId : parseInt(receiverId),
+          },
+          {
+            patient: { userId: isDriver ? senderId : parseInt(receiverId) },
+            driverId: isDriver ? parseInt(receiverId) : senderId,
+          },
         ],
       },
       select: { id: true },
     });
 
     if (!booking) {
-      return res.status(403).json({ error: "No shared booking found between sender and receiver" });
+      return res
+        .status(403)
+        .json({ error: "No shared booking found between sender and receiver" });
     }
 
     let imageUrl;
@@ -135,8 +142,12 @@ module.exports.sendMessageDriver = async (req, res) => {
       data: {
         text,
         image: imageUrl,
-        ...(isDriver ? { senderDriverId: senderId } : { senderUserId: senderId }),
-        ...(recipientType === "driver" ? { receiverDriverId: parseInt(receiverId) } : { receiverUserId: parseInt(receiverId) }),
+        ...(isDriver
+          ? { senderDriverId: senderId }
+          : { senderUserId: senderId }),
+        ...(recipientType === "driver"
+          ? { receiverDriverId: parseInt(receiverId) }
+          : { receiverUserId: parseInt(receiverId) }),
         bookingId: booking.id,
       },
     });

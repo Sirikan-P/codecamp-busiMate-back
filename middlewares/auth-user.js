@@ -12,6 +12,11 @@ module.exports.authUser = async (req, res, next) => {
 
   try {
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
+    if (token_decode.role !== "user") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Forbidden: User access only" });
+    }
     req.user = {
       id: token_decode.id,
       email: token_decode.email,
@@ -26,8 +31,6 @@ module.exports.authUser = async (req, res, next) => {
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ success: false, message: "Invalid token" });
     }
-    res.status(500).json({
-      message: "Internal server error",
-    });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
