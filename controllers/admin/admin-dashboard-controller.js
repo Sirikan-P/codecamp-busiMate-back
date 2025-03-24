@@ -36,6 +36,7 @@ exports.getBookingDataByDate =  async(req, res, next) => {
               firstName: true,
               lastName: true,
               phoneNumber: true,
+              profileImage: true,
               user: {
                 select: {
                   firstName: true,
