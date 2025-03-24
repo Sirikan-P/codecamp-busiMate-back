@@ -32,7 +32,10 @@ exports.createBooking = async (req, res, next) => {
       public_id: `${Date.now()}`,
       resource_type: "auto",
       folder: "BusiMate",
-    });
+    }
+  );
+  fs.unlinkSync(req.file.path);
+
 
     const userId = req.user.id;
     const {
