@@ -32,9 +32,8 @@ exports.checkOut = async (req, res, next) => {
       ],
       mode: 'payment',
       return_url: `http://localhost:5173/user/complete/{CHECKOUT_SESSION_ID}`, //** wait for front-ent */
-    });
-
-     console.log('ss',session)
+    });    
+      
     res.send({ clientSecret: session.client_secret });
   } catch (error) {
     next(error)
@@ -54,7 +53,7 @@ exports.checkOutStatus = async (req, res, next) => {
       return createError(400, "Something wrong")
     }
 
-    // console.log(session) 
+    console.log(session) 
     console.log("bookingId",bookingId) 
 
     // update order status-----------------------
@@ -62,14 +61,65 @@ exports.checkOutStatus = async (req, res, next) => {
       where: { id: Number(bookingId) },
       data: {
         paymentStatus: "COMPLETE",
+        paymentIntentId: session.payment_intent, // REFUNDED **บันทึก PaymentIntentId ลงในฐานข้อมูล**
         bookingStatus: "UP_COMING"
+
       }
     })
+    //console.log('Session:', session);  
 
-    //update product order qty = order prduct qty 
 
     res.json({ message: "payment complete" })
   } catch (error) {
     next(error)
   }
 }
+
+//refund 
+exports.refundPayment = async (req, res, next) => {
+  try {
+    const { bookingId } = req.body;
+
+    // ค้นหาข้อมูลการจองจาก Database
+    const booking = await prisma.booking.findUnique({
+      where: { id: Number(bookingId) }
+    });
+
+    if (!booking) {
+      return next(createError(404, "Booking not found"));
+    }
+
+    // ตรวจสอบว่า booking ได้จ่ายเงินแล้วหรือไม่
+    if (booking.paymentStatus !== "COMPLETE") {
+      return next(createError(400, "Payment is not complete, cannot refund"));
+    }
+    if (!booking.paymentIntentId) {
+      return next(createError(400, "Payment cannot refund"));
+    }
+
+    // ค้นหา Session ของ Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(booking.paymentIntentId);
+
+    if (!paymentIntent || paymentIntent.status !== "succeeded") {
+      return next(createError(400, "Cannot refund, payment was not successful"));
+    }
+
+    // ทำการ Refund
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntent.id,
+    });
+
+    // อัปเดตสถานะในฐานข้อมูล
+    await prisma.booking.update({
+      where: { id: Number(bookingId) },
+      data: {
+        paymentStatus: "REFUNDED",
+        bookingStatus: "CANCEL"
+      }
+    });
+
+    res.json({ message: "Refund successful", refund });
+  } catch (error) {
+    next(error);
+  }
+};

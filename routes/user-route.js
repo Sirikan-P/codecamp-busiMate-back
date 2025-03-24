@@ -46,5 +46,6 @@ router.patch('/patient/edit',authCheck,userController.editPatients)
 //@ENDPOINT http://localhost:8877/api/user/payment/checkout
 router.post('/payment/checkout' ,payment.checkOut )  
 router.get('/payment/checkout-status/:session_id',payment.checkOutStatus )  
+router.post('/payment/checkout/refund',payment.refundPayment )  
 
 module.exports = router;

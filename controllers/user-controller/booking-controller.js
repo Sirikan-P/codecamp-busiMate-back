@@ -33,7 +33,7 @@ exports.createBooking = async (req, res, next) => {
     });
     fs.unlinkSync(req.file.path);
 
-    const userId = req.user.id;
+    const userId = req.user.id;    
     const {
       needWheelChair,
       needAssist,
@@ -45,14 +45,15 @@ exports.createBooking = async (req, res, next) => {
       CarType,
     } = req.body;
 
+  
     const user = await prisma.user.findUnique({ where: { id: +userId } });
     if (!user) return next(createError(404, "User not found"));
-
+   
     const patient = await prisma.patient.findUnique({
       where: { id: +patientId },
     });
     if (!patient) return next(createError(404, "Patient not found"));
-
+    
     const hospitalAddressId = JSON.parse(hospitalId);
     const userBookingAddressId = JSON.parse(userAddressId);
 
@@ -76,7 +77,7 @@ exports.createBooking = async (req, res, next) => {
         driverId: true,
       },
     });
-
+    
     // ดึงไดรเวอร์ทั้งหมดพร้อมพิกัด
     const drivers = await prisma.driver.findMany({
       where: {
@@ -95,7 +96,7 @@ exports.createBooking = async (req, res, next) => {
         },
       },
       select: {
-        id: true,
+        id: true,        
         DriverAddress: {
           select: {
             lat: true,
@@ -104,33 +105,34 @@ exports.createBooking = async (req, res, next) => {
         },
       },
     });
-
+    
+    if (!drivers) return next(createError(404, "drivers not found"));
+    
     // กรองไดรเวอร์ที่อยู่ภายในรัศมี 10 กิโลเมตรจาก userAddress
-    const nearbyDrivers = drivers.filter((driver) => {
-      if (!driver.DriverAddress || driver.DriverAddress.length === 0)
-        return false;
+    // const nearbyDrivers = drivers.filter((driver) => {
+    //   if (!driver.DriverAddress || driver.DriverAddress.length === 0)
+    //     return false;
 
-      const driverAddress = driver.DriverAddress[0]; // สมมติว่า DriverAddress มี 1 ตัว
-      const distance = haversine(
-        userAddress.lat,
-        userAddress.long,
-        driverAddress.lat,
-        driverAddress.long
-      );
+    //   const driverAddress = driver.DriverAddress[0]; // สมมติว่า DriverAddress มี 1 ตัว
+    //   const distance = haversine(
+    //     userAddress.lat,
+    //     userAddress.long,
+    //     driverAddress.lat,
+    //     driverAddress.long
+    //   );
 
-      return distance <= 10; // กรองเฉพาะไดรเวอร์ที่อยู่ในระยะ 10 กม.
-    });
-
-    if (nearbyDrivers.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "No available drivers within 10km" });
+    //   return distance <= 10; // กรองเฉพาะไดรเวอร์ที่อยู่ในระยะ 10 กม.
+    // });
+    const nearbyDrivers = drivers
+    console.log("call prisma drivers", nearbyDrivers.length)
+    if (nearbyDrivers.length === 0 ){
+      return res.status(400).json({ error: "No available drivers within 10km" });     
     }
-
+  
     // สุ่มเลือก driverId ที่อยู่ใกล้ที่สุด
     const selectedDriver =
       nearbyDrivers[Math.floor(Math.random() * nearbyDrivers.length)];
-console.log("selectedDriver",selectedDriver);
+    console.log("selectedDriver",selectedDriver);
 
     // สร้าง booking
     const driverAddress = await prisma.driverAddress.findFirst({

@@ -5,8 +5,6 @@ const morgan = require("morgan");
 const notFound = require("./middlewares/notFound");
 const handleErrors = require("./middlewares/error");
 
-const  prisma =  require ("./configs/prisma.js");
-const  cloudinary = require ("./configs/cloudinary.js");
 
 const  { Server } = require ("socket.io");
 const  { createServer } = require ("http");
