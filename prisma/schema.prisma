@@ -28,13 +28,14 @@ model User {
 }
 
 model UserAddress {
-  id      Int      @id @default(autoincrement())
-  address String?  @default("HOME")
-  lat     Decimal?
-  long    Decimal?
-  status  String?  @default("USE")
-  userId  Int      @map("user_id")
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       Int       @id @default(autoincrement())
+  address  String?   @default("HOME")
+  lat      Decimal?
+  long     Decimal?
+  status   String?   @default("USE")
+  userId   Int       @map("user_id")
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
 
   @@map("user_address")
 }
@@ -94,13 +95,14 @@ model Driver {
 }
 
 model DriverAddress {
-  id       Int      @id @default(autoincrement())
-  address  String?  @default("HOME")
+  id       Int       @id @default(autoincrement())
+  address  String?   @default("HOME")
   lat      Decimal?
   long     Decimal?
-  status   String?  @default("USE")
+  status   String?   @default("USE")
   driverId Int
-  driver   Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driver   Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  bookings Booking[]
 
   @@map("driver_address")
 }
@@ -162,26 +164,31 @@ model Patient {
 }
 
 model Booking {
-  id                 Int           @id @default(autoincrement())
-  needWheelChair     Request       @default(NOT_NEED)
-  needAssist         Request       @default(NOT_NEED)
-  appointmentDate    String        @map("appointment_date")
-  bookingStatus      BookingStatus @default(FIND_DRIVER) @map("booking_status")
-  paymentStatus      PaymentStatus @default(IN_PROCESS) @map("payment_status")
-  appointmentImage   String?       @map("@appointment_image")
-  specialRequirement String?       @map("special_requirement")
-  totalPrice         Decimal       @map("total_price")
-  createdAt          DateTime      @default(now()) @map("created_at")
-  updatedAt          DateTime      @updatedAt @map("updated_at")
-  patient            Patient       @relation(fields: [patientId], references: [id])
+  id                 Int            @id @default(autoincrement())
+  needWheelChair     Request        @default(NOT_NEED)
+  needAssist         Request        @default(NOT_NEED)
+  cartype            CarType        @default(SEETS_4)
+  appointmentDate    String?         @map("appointment_date")
+  bookingStatus      BookingStatus?  @default(FIND_DRIVER) @map("booking_status")
+  paymentStatus      PaymentStatus?  @default(IN_PROCESS) @map("payment_status")
+  appointmentImage   String?        @map("@appointment_image")
+  specialRequirement String?        @map("special_requirement")
+  totalPrice         Decimal?        @map("total_price")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  patient            Patient        @relation(fields: [patientId], references: [id])
   patientId          Int
-  driver             Driver        @relation(fields: [driverId], references: [id])
-  driverId           Int
-  hospital           Hospital?     @relation(fields: [hospitalId], references: [id])
+  driver             Driver?         @relation(fields: [driverId], references: [id])
+  driverId           Int?
+  hospital           Hospital?      @relation(fields: [hospitalId], references: [id])
   hospitalId         Int?
   reviews            Review[]
   reports            Report[]
   Message            Message[]
+  DriverAddress      DriverAddress? @relation(fields: [driverAddressId], references: [id])
+  driverAddressId    Int?
+  UserAddress        UserAddress?   @relation(fields: [userAddressId], references: [id])
+  userAddressId      Int?
 
   @@map("booking")
 }
