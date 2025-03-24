@@ -4,6 +4,7 @@ const {
   getMessagesUser,
   getUsersForSidebar,
   sendMessageUser,
+  bookingChatUser,
 } = require("../controllers/user-controller/message-user-controller");
 
 const router = express.Router();
@@ -12,5 +13,6 @@ const router = express.Router();
 router.get("/users", authUser, getUsersForSidebar); // /api/messages-user/users
 router.get("/user/:id", authUser, getMessagesUser); // /api/messages-user/user/:id
 router.post("/user/send/:id", authUser, sendMessageUser); // /api/messages-user/user/send/:id
+router.get("/booking/chat/:receiverId", authUser, bookingChatUser);
 
 module.exports = router;

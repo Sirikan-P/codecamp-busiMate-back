@@ -12,7 +12,7 @@ const {
   updateDriverProfile,
 } = require("../controllers/auth-controller");
 const { authUser } = require("../middlewares/auth-user");
-const { authAdmin } = require("../middlewares/auth-admin");
+const { adminAuth } = require("../middlewares/auth-admin");
 const { authDriver } = require("../middlewares/auth-driver");
 const upload = require("../middlewares/upload");
 
@@ -42,6 +42,6 @@ router.put(
 // Auth Check Routes
 router.get("/auth/check/user", authUser, checkUserAuth);
 router.get("/auth/check/driver", authDriver, checkDriverAuth);
-router.get("/auth/check/admin", authAdmin, checkAdminAuth);
+router.get("/auth/check/admin", adminAuth, checkAdminAuth);
 
 module.exports = router;

@@ -6,7 +6,6 @@ const payment = require("../controllers/payment-controller")
 
 const { authCheck } = require("../middlewares/authCheck");
 const reviewController = require("../controllers/user-controller/review-controller")
-const { authUser } = require("../middlewares/auth-user");
 const upload = require("../middlewares/upload");
 
 
@@ -23,7 +22,7 @@ router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
 router.get("/hospital", bookingController.getHospital);
 router.get("/useraddress",authCheck, bookingController.getUserAddress);
 router.post("/booking/finddriver",authCheck, bookingController.findDriver);
- 
+
 
 router.get('/me',authCheck,userController.showUser)
 router.patch('/me/edit',authCheck,userController.editUser)

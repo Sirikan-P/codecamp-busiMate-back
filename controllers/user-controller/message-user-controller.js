@@ -1,6 +1,5 @@
 const prisma = require("../../configs/prisma");
 const cloudinary = require("../../configs/cloudinary");
-const { getReceiverSocketId, io } = require("../../configs/socket");
 
 module.exports.getUsersForSidebar = async (req, res) => {
   try {
@@ -153,6 +152,33 @@ module.exports.sendMessageUser = async (req, res) => {
     res.status(201).json(newMessage);
   } catch (error) {
     console.error("Error in sendMessage controller:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+module.exports.bookingChatUser = async (req, res) => {
+  try {
+    const { receiverId } = req.params;
+    const senderId = req.user.id;
+
+    const booking = await prisma.booking.findFirst({
+      where: {
+        OR: [
+          { patient: { userId: senderId }, driverId: parseInt(receiverId) },
+          { patient: { userId: parseInt(receiverId) }, driverId: senderId },
+        ],
+        bookingStatus: { not: "COMPLETE" },
+      },
+      select: { id: true },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: "No active booking found" });
+    }
+
+    res.json({ bookingId: booking.id });
+  } catch (error) {
+    console.error("Error fetching booking ID:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -4,8 +4,7 @@ const adminDashboardController = require("../controllers/admin/admin-dashboard-c
 const adminUserController = require("../controllers/admin/admin-user-controller")
 const adminReportController = require("../controllers/admin/admin-report-controller")
 const { adminAuth } = require("../middlewares/auth-admin")
-const { authCheck } = require("../middlewares/authCheck")
- 
+
 
 // @ENDPOINT http://localhost:8877/api/admin/...
 router.get("/dashboard/bookingDataByDate", adminAuth, adminDashboardController.getBookingDataByDate)

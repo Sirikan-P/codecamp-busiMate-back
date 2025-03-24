@@ -158,3 +158,30 @@ module.exports.sendMessageDriver = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+module.exports.bookingChatDriver = async (req, res) => {
+  try {
+    const { receiverId } = req.params;
+    const senderId = req.driver.id;
+
+    const booking = await prisma.booking.findFirst({
+      where: {
+        OR: [
+          { patient: { userId: parseInt(receiverId) }, driverId: senderId },
+          { patient: { userId: senderId }, driverId: parseInt(receiverId) },
+        ],
+        bookingStatus: { not: "COMPLETE" },
+      },
+      select: { id: true },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: "No active booking found" });
+    }
+
+    res.json({ bookingId: booking.id });
+  } catch (error) {
+    console.error("Error fetching booking ID:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
