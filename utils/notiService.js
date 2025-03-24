@@ -6,7 +6,7 @@ const notiService = (io) => {
     //console.log('a user connected');
     //create socket for noti 
     socket.on('send_noti', (booking) => {
-      //console.log(booking.driverId)      
+      //console.log("hello noti" ,booking)      
       io.emit("U"+booking.driverId, booking )   // ("event name" , "data" )
     })
 

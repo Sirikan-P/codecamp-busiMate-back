@@ -22,6 +22,9 @@ router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
 router.get("/hospital", bookingController.getHospital);
 router.get("/useraddress",authCheck, bookingController.getUserAddress);
 router.post("/booking/finddriver",authCheck, bookingController.findDriver);
+router.post("/booking/findNewdriver",authCheck, bookingController.findNewDriver);
+router.patch("/booking/updateNewdriver",authCheck, bookingController.UpdateNewDriver);
+ 
 
 
 router.get('/me',authCheck,userController.showUser)
