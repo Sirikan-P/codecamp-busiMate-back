@@ -5,7 +5,21 @@ const morgan = require("morgan");
 const notFound = require("./middlewares/notFound");
 const handleErrors = require("./middlewares/error");
 
-const { app, server, io } = require("./configs/socket");
+const  prisma =  require ("./configs/prisma.js");
+const  cloudinary = require ("./configs/cloudinary.js");
+
+const  { Server } = require ("socket.io");
+const  { createServer } = require ("http");
+
+const app = express()
+const server = createServer(app);
+
+const io = new Server(server, {
+  cors: { origin: ["http://localhost:5173"] },
+});
+
+
+// const { app, server, io } = require("./configs/socket");
 
 // Import Routing
 const authRouter = require("./routes/auth-route");
@@ -15,6 +29,7 @@ const adminRouter = require("./routes/admin-route");
 const notiService = require("./utils/notiService");
 const messageUserRouter = require("./routes/message-user-route");
 const messageDriverRouter = require("./routes/message-driver-route");
+const { chatio } = require("./configs/socket.js")
 
 // Middlewares
 app.use(
@@ -42,7 +57,7 @@ app.use(handleErrors);
 
 //socket -- create event
 notiService(io);
-
+chatio(io)
 // Start server
 const port = process.env.PORT || 8877;
 server.listen(port, () => console.log("Server is running on", port));
