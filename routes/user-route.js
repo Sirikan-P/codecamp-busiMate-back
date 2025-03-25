@@ -6,7 +6,6 @@ const payment = require("../controllers/payment-controller")
 
 const { authCheck } = require("../middlewares/authCheck");
 const reviewController = require("../controllers/user-controller/review-controller")
-const { authUser } = require("../middlewares/auth-user");
 const upload = require("../middlewares/upload");
 
 
@@ -23,7 +22,10 @@ router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
 router.get("/hospital", bookingController.getHospital);
 router.get("/useraddress",authCheck, bookingController.getUserAddress);
 router.post("/booking/finddriver",authCheck, bookingController.findDriver);
+router.post("/booking/findNewdriver",authCheck, bookingController.findNewDriver);
+router.patch("/booking/updateNewdriver",authCheck, bookingController.UpdateNewDriver);
  
+
 
 router.get('/me',authCheck,userController.showUser)
 router.patch('/me/edit',authCheck,userController.editUser)
@@ -51,5 +53,6 @@ router.delete('/address/:id',authCheck, userController.deleteUserAddress)
 //@ENDPOINT http://localhost:8877/api/user/payment/checkout
 router.post('/payment/checkout' ,payment.checkOut )  
 router.get('/payment/checkout-status/:session_id',payment.checkOutStatus )  
+router.post('/payment/checkout/refund',payment.refundPayment )  
 
 module.exports = router;
