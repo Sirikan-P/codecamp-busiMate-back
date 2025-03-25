@@ -6,7 +6,7 @@ const notiService = (io) => {
 
     //create socket for noti -------------------
     socket.on('send_noti', (booking) => {
-     
+     console.log( "hello noti" , booking)
       io.emit("U"+booking.driverId, booking )   // ("event name: driver ID" , "data" )
     })
 
