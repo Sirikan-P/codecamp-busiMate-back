@@ -1,7 +1,8 @@
 const prisma = require("../../configs/prisma")
 const cloudinary = require('../../configs/cloudinary')
 const path = require('path')
-const fs = require('fs/promises')
+const fs = require('fs/promises');
+const createError = require("../../utils/createError");
 
 exports.showUser = async (req, res, next) => {
     try {
@@ -159,6 +160,40 @@ exports.editPatients = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.deletePatients = async (req, res, next) => {
+    try {
+        const patientId = req.params.id;
+        console.log("patientId:", patientId);
+        const patient = await prisma.patient.findUnique({
+            where: {
+                id: +patientId,
+            },
+            select: {
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                age: true,
+                healthCondition: true,
+            }
+            
+
+        });
+
+        if (!patient) {
+            return res.status(404).json({ error: "Patient not found" });
+        }
+        await prisma.patient.delete({
+            where: {
+                id: +patientId,
+            },
+        });
+        res.json(patient);
+    } catch (error) {
+        next(error);
+    }
+}
+
 exports.editProfileImage = async (req, res, next) => {
     try {
 console.log(req.file);
@@ -191,4 +226,132 @@ console.log(req.file);
         next(error);
     }
 };
+exports.addUserAddress = async (req, res, next) => {
+    try {
+        //console.log( req.user)
+        const { email, id } = req.user
+        const newData = req.body
 
+        const address = await prisma.userAddress.findFirst({
+            where: {
+                userId: Number(id),
+                lat: Number(newData.lat),
+                long: Number(newData.long)
+            }
+        })
+
+        if (address) {
+            return next(createError(400, 'Address Already add'))
+        }
+
+        const newAddress = await prisma.userAddress.create({
+            data: {
+                userId: Number(id),
+                address: newData.address,
+                lat: Number(newData.lat),
+                long: Number(newData.long),
+                status: "NOTUSE"
+            }
+        })
+
+        res.json({
+            success: true,
+            message: "Add address success",
+            result: newAddress
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+//update address  --------------------------------
+exports.updateUserAddress = async (req, res, next) => {
+    try {
+        //console.log( req.user)
+        const { email, id } = req.user
+        const newData = req.body
+
+        const address = await prisma.userAddress.findFirst({
+            where: {
+                userId: Number(id),
+                id: Number(newData.id)
+            }
+        })
+
+        if (!address) {
+            return next(createError(401, 'No address data'))
+        }
+        console.log(newData)
+        let newAddress 
+        //-------------------------------------------------
+        if(newData.status == "USE"){
+            //set other to NOTUSE
+            await prisma.userAddress.updateMany({
+                where: { userId: Number(id), status: "USE"  },
+                data: { 
+                    status: "NOTUSE"                     
+                }
+            })
+              //set use
+            newAddress = await prisma.userAddress.update({
+                where: {
+                    id: address.id
+                },
+                data: {status: "USE" }
+            })
+        }
+
+        const userAddress =  await prisma.userAddress.findMany({
+            where: { userId: Number(id) }
+        });
+        
+        res.json({
+            success: true,
+            message: "Add address success",
+            result: userAddress
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+//delete address  ----------------------------------------
+exports.deleteUserAddress = async (req, res, next) => {
+    try {
+        const { email, id } = req.user;
+        const data = req.params // รับค่า ID ของที่อยู่จาก params
+
+        console.log('deleteAddress',data)
+        // ตรวจสอบว่ามีที่อยู่ที่ต้องการลบหรือไม่
+        const address = await prisma.userAddress.findUnique({
+            where: { id: Number(data.id), userId: Number(id) }
+        });
+
+        if (!address) {
+            return next(createError(404, 'Address not found'));
+        }
+        // ตรวจสอบว่ามีที่อยู่ที่ใช้อยู่หรือไม่
+        const userUse = await prisma.userAddress.findFirst({
+            where: { id: Number(data.id), userId: Number(id), status: "USE" }
+        })
+        if (userUse) {
+            return next(createError(400, 'Cannot delete current Address'));
+        }
+
+        // ลบที่อยู่
+        await prisma.userAddress.delete({
+            where: { id: Number(data.id) }
+        });
+
+        const userAddress =  await prisma.userAddress.findMany({
+            where: { userId: Number(id) }
+        });
+
+        res.json({
+            success: true,
+            message: "Delete address success",
+            result: userAddress
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
