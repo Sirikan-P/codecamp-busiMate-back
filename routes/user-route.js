@@ -33,6 +33,13 @@ router.patch('/patient/edit/:id',authCheck,userController.editPatients)
 router.get('/patient',authCheck,userController.getPatients)
 router.get('/patient/:id',authCheck,userController.getByPatientId)
 router.patch('/patient/edit',authCheck,userController.editPatients)
+router.delete('/patient/delete/:id',authCheck,userController.deletePatients)
+
+
+router.post('/address',authCheck, userController.addUserAddress)
+router.patch('/address',authCheck, userController.updateUserAddress)
+router.delete('/address/:id',authCheck, userController.deleteUserAddress)
+
 
 // @ENDPOINT http://localhost:8877/api/user/...
 //
