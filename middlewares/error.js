@@ -1,7 +1,8 @@
 const handleErrors = (err, req, res, next) => {
-  res
-  .status(err.statusCode || 500)
-  .json({message: err.message || "Somthing wrong!!!"})
-}
+  const status = err.statusCode || 500;
+  const message = err.message || "Something went wrong!";
+  console.error(`Error ${status}: ${message}`);
+  res.status(status).json({ message });
+};
 
-module.exports = handleErrors
+module.exports = handleErrors;

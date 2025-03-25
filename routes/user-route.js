@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const userController = require('../controllers/user-controller/user-controller')  
@@ -7,7 +6,6 @@ const payment = require("../controllers/payment-controller")
 
 const { authCheck } = require("../middlewares/authCheck");
 const reviewController = require("../controllers/user-controller/review-controller")
-const { authUser } = require("../middlewares/auth-user");
 const upload = require("../middlewares/upload");
 
 
@@ -24,13 +22,19 @@ router.patch("/booking/cancel", authCheck, bookingController.cancelBooking);
 router.get("/hospital", bookingController.getHospital);
 router.get("/useraddress",authCheck, bookingController.getUserAddress);
 router.post("/booking/finddriver",authCheck, bookingController.findDriver);
+router.post("/booking/findNewdriver",authCheck, bookingController.findNewDriver);
+router.patch("/booking/updateNewdriver",authCheck, bookingController.UpdateNewDriver);
  
+
 
 router.get('/me',authCheck,userController.showUser)
 router.patch('/me/edit',authCheck,userController.editUser)
+router.post('/me/profile/upload',authCheck,upload.single('profileImageUrl'),userController.editProfileImage)
 router.post('/patient/add',authCheck,userController.addPatients)
-router.patch('/patient/edit',authCheck,userController.editPatients)
+router.patch('/patient/edit/:id',authCheck,userController.editPatients)
 router.get('/patient',authCheck,userController.getPatients)
+router.get('/patient/:id',authCheck,userController.getByPatientId)
+router.patch('/patient/edit',authCheck,userController.editPatients)
 
 // @ENDPOINT http://localhost:8877/api/user/...
 //
@@ -42,5 +46,6 @@ router.get('/patient',authCheck,userController.getPatients)
 //@ENDPOINT http://localhost:8877/api/user/payment/checkout
 router.post('/payment/checkout' ,payment.checkOut )  
 router.get('/payment/checkout-status/:session_id',payment.checkOutStatus )  
+router.post('/payment/checkout/refund',payment.refundPayment )  
 
 module.exports = router;
