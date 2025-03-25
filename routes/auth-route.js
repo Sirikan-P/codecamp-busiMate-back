@@ -40,8 +40,8 @@ router.put(
 );
 
 // Auth Check Routes
-router.get("/auth/check/user", authUser, checkUserAuth);
-router.get("/auth/check/driver", authDriver, checkDriverAuth);
-router.get("/auth/check/admin", adminAuth, checkAdminAuth);
+router.get("/check/user", authUser, checkUserAuth);
+router.get("/check/driver", authDriver, checkDriverAuth);
+router.get("/check/admin", adminAuth, checkAdminAuth);
 
 module.exports = router;

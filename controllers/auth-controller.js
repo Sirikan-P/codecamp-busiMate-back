@@ -143,6 +143,7 @@ module.exports = {
   },
 
   loginUser: async (req, res) => {
+    console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
     const { email, password } = req.body;
     console.log(email)
     try {
