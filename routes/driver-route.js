@@ -15,11 +15,7 @@ const upload = require("../middlewares/upload");
 // @ENDPOINT http://localhost:8877/api/driver/...
 //my profile -------
 router.get("/me", authCheck, driverController.currentDriver); //authen for pages : verify token
-router.patch(
-  "/me",
-  authCheck,
-  upload.single("profileImageUrl"),
-  driverController.updateProfile
+router.patch("/me", authCheck,  upload.single("profileImageUrl"), driverController.updateProfile
 );
 //my address -------
 router.post("/address", authCheck, driverController.addDriverAddress);
@@ -29,10 +25,7 @@ router.delete("/address/:id", authCheck, driverController.deleteDriverAddress);
 //my booking id -------
 router.get("/booking/:id", authCheck, driverBookingController.showDetail);
 router.get("/booking", authCheck, driverBookingController.showAll);
-router.patch(
-  "/booking/:id",
-  authCheck,
-  driverBookingController.updateBookingStatus
+router.patch("/booking/:id",authCheck, driverBookingController.updateBookingStatus
 );
 
 //my wallet -------
