@@ -22,6 +22,7 @@ const haversine = (lat1, lon1, lat2, lon2) => {
 
 exports.createBooking = async (req, res, next) => {
   try {
+
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }

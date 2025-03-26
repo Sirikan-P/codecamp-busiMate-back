@@ -8,9 +8,8 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     const driverId = parseInt(req.user.id);
     const bookingId = parseInt(req.params.id);
-    const { bookingStatus  } = req.body;
-
-
+    const bookingStatus  = req.body.status;
+    
     // ตรวจสอบว่ามี booking หรือไม่
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId }
@@ -43,7 +42,7 @@ exports.showAll = async (req, res, next) => {
   try {
     const driverId = parseInt(req.user.id);
     const { status } = req.query;
-    //console.log("status ssss ",driverId,status)
+  
     // ค้นหาคำสั่งจองคิวของคนขับ
     const allBooking = await prisma.booking.findMany({
       where: {
